@@ -1,0 +1,56 @@
+name: Kemnaker Magang Reminder (Cloud Cron)
+
+on:
+  schedule:
+    # 15:30 WIB = 08:30 UTC (Senin - Jumat)
+    - cron: '30 8 * * 1-5'
+    # 21:00 WIB = 14:00 UTC (Senin - Jumat, tetap jalan saat laptop mati)
+    - cron: '0 14 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      target_time:
+        description: 'Jadwal yang ingin dijalankan (15:30 atau 21:00)'
+        required: true
+        default: '21:00'
+
+jobs:
+  run-reminder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Google Chrome (for Puppeteer)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Install Dependencies
+        run: npm ci || npm install
+
+      - name: Determine Schedule Time
+        id: schedule-check
+        run: |
+          HOUR=$(date -u +%H)
+          if [ "$HOUR" -ge 12 ]; then
+            echo "TIME=21:00" >> $GITHUB_ENV
+          else
+            echo "TIME=15:30" >> $GITHUB_ENV
+          fi
+
+      - name: Execute Kemnaker Check & Reminder Blast
+        env:
+          KEMNAKER_PHONE: ${{ secrets.KEMNAKER_PHONE || '0811917603' }}
+          KEMNAKER_PASS: ${{ secrets.KEMNAKER_PASS || 'Tb#12345' }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MENTOR_EMAIL: ${{ secrets.MENTOR_EMAIL || 'mentor.rekind@gmail.com' }}
+        run: |
+          TARGET=${{ github.event.inputs.target_time || env.TIME }}
+          echo "Menjalankan otomasi untuk jadwal: $TARGET WIB..."
+          node sync-and-remind.js --time=$TARGET

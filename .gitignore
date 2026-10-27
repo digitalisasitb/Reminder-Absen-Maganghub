@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables & local secrets
+.env
+.env.local
+
+# Local session and screenshots (Do NOT commit cookies or session credentials)
+data/session.json
+data/*.png
+data/logs.json
+
+# Retain initial dummy/template structure for config and intern lists
+# data/config.json should be sanitized or handled via env vars in GitHub Actions

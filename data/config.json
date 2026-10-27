@@ -1,0 +1,49 @@
+{
+  "kemnaker": {
+    "email": "0811917603",
+    "password": "Tb#12345",
+    "authMode": "browser",
+    "bearerToken": "",
+    "sessionCookie": "",
+    "headless": false,
+    "browserPath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "targetUrl": "https://monev.maganghub.kemnaker.go.id/dashboard/peserta",
+    "loginUrl": "https://account.kemnaker.go.id/auth/login",
+    "lastSync": "2026-10-27T03:11:59.456Z",
+    "syncStatus": "authenticated"
+  },
+  "whatsapp": {
+    "provider": "simulation",
+    "fonnteToken": "",
+    "wablasToken": "",
+    "wablasDomain": "https://phone.wablas.com",
+    "customWebhookUrl": "",
+    "template": "Halo *{nama}*,\n\nKami mengingatkan bahwa status presensi kamu di portal *Kemnaker MagangHub* hari ini (*{tanggal}*) pada pengecekan pukul *15:30 WIB* masih tercatat *BELUM ABSEN*.\n\n⚠️ Harap segera melakukan pengisian presensi sebelum pukul *{deadline} WIB* melalui tautan resmi:\n🔗 {link_absen}\n\nTerima kasih dan selamat menyelesaikan tugas magang hari ini di PT Rekayasa Industri! 💼✨",
+    "deadlineTime": "24:00",
+    "adminTestPhone": "0811917603"
+  },
+  "email": {
+    "mentorEmail": "mentor.rekind@gmail.com",
+    "host": "smtp.gmail.com",
+    "port": 465,
+    "secure": true,
+    "user": "",
+    "pass": "",
+    "deadlineTime": "24:00"
+  },
+  "scheduler": {
+    "enabled": true,
+    "time1": "15:30",
+    "time2": "21:00",
+    "activeDays": [
+      "Senin",
+      "Selasa",
+      "Rabu",
+      "Kamis",
+      "Jumat"
+    ],
+    "autoSendReminder": true,
+    "lastRunAfternoon": null,
+    "lastRunNight": null
+  }
+}

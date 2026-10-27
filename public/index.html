@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kemnaker Magang Reminder - Presensi Otomatis Monev MagangHub</title>
+  <meta name="description" content="Aplikasi web otomatisasi reminder presensi peserta magang Kemnaker Monev MagangHub via WhatsApp dengan sistem login otomatis dan scheduler berkala.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏰</text></svg>">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="brand-logo-badge">
+          <span>💼</span>
+        </div>
+        <div class="brand-text">
+          <h1>Kemnaker Magang Reminder</h1>
+          <p>Otomasi Presensi Monev MagangHub & Pengingat WhatsApp Anak Magang</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div id="engine-status-pill" class="status-pill">
+          <span class="pulse-dot"></span> Memuat Status...
+        </div>
+        <button id="btn-sync-top" class="btn btn-secondary btn-sm" title="Tarik data terbaru dari Kemnaker Monev">
+          🔄 Sync Presensi
+        </button>
+        <button id="btn-remind-top" class="btn btn-whatsapp btn-sm" title="Kirim reminder WhatsApp ke semua yang belum absen">
+          ⚡ Kirim Reminder Semua
+        </button>
+      </div>
+    </header>
+
+    <!-- KPI Metric Cards Grid -->
+    <section class="stats-grid">
+      <!-- Card 1: Total Interns -->
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Total Anak Magang</span>
+          <div class="stat-icon" style="color: #60a5fa;">👥</div>
+        </div>
+        <div class="stat-value" id="stat-total-interns">0</div>
+        <div class="stat-desc">Peserta aktif terdaftar di Monev Kemnaker</div>
+      </div>
+
+      <!-- Card 2: Sudah Absen -->
+      <div class="stat-card success-card">
+        <div class="stat-header">
+          <span class="stat-title">Sudah Absen Hari Ini</span>
+          <div class="stat-icon" style="color: #34d399;">✅</div>
+        </div>
+        <div class="stat-value" id="stat-hadir-interns" style="color: #34d399;">0</div>
+        <div class="stat-desc">Telah mengisi presensi masuk di MagangHub</div>
+      </div>
+
+      <!-- Card 3: Belum Absen -->
+      <div class="stat-card alert-card">
+        <div class="stat-header">
+          <span class="stat-title">Belum Absen</span>
+          <div class="stat-icon" style="color: #fbbf24;">⚠️</div>
+        </div>
+        <div class="stat-value" id="stat-belum-absen" style="color: #fbbf24;">0</div>
+        <div class="stat-desc">Perlu diingatkan via pesan WhatsApp</div>
+      </div>
+
+      <!-- Card 4: Jadwal Otomasi -->
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-title">Jadwal Reminder</span>
+          <div class="stat-icon" style="color: #c084fc;">⏰</div>
+        </div>
+        <div class="stat-value" id="stat-scheduler-time" style="font-size: 1.8rem; color: #c084fc;">09:00 WIB</div>
+        <div class="stat-desc" id="stat-scheduler-desc">Setiap Senin - Jumat</div>
+      </div>
+    </section>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="tabs-nav">
+      <button class="tab-btn active" data-target="tab-presensi">
+        📋 Presensi Hari Ini <span class="tab-badge" id="badge-unclocked-count">0</span>
+      </button>
+      <button class="tab-btn" data-target="tab-kemnaker">
+        🔐 Akun & Koneksi Kemnaker
+      </button>
+      <button class="tab-btn" data-target="tab-whatsapp">
+        💬 Pengaturan WhatsApp
+      </button>
+      <button class="tab-btn" data-target="tab-scheduler">
+        ⏱️ Jadwal Otomatis (Cron)
+      </button>
+      <button class="tab-btn" data-target="tab-logs">
+        📜 Riwayat & Log Aktivitas
+      </button>
+    </nav>
+
+    <!-- Tab 1: Presensi Hari Ini -->
+    <main id="tab-presensi" class="tab-pane active">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Daftar Presensi Peserta Pemagangan</h2>
+            <p class="panel-subtitle">Data presensi real-time dari portal Monev MagangHub Kemnaker.</p>
+          </div>
+          <div class="toolbar">
+            <div class="search-input-wrapper">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="search-intern" class="search-input" placeholder="Cari nama, kampus, posisi, no HP...">
+            </div>
+            <select id="filter-status" class="filter-select">
+              <option value="all">Semua Status</option>
+              <option value="belum_absen">⚠️ Hanya Belum Absen</option>
+              <option value="hadir">✓ Sudah Hadir</option>
+              <option value="izin">Izin / Sakit</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Peserta Magang</th>
+                <th>Kontak & Pembimbing</th>
+                <th>Status Absen</th>
+                <th>Waktu Presensi</th>
+                <th>Notifikasi WA</th>
+                <th>Aksi Pengingat</th>
+              </tr>
+            </thead>
+            <tbody id="interns-table-body">
+              <!-- Loaded dynamically via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- Tab 2: Akun & Koneksi Kemnaker -->
+    <section id="tab-kemnaker" class="tab-pane">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Koneksi Portal Monev Kemnaker</h2>
+            <p class="panel-subtitle">Target portal: <a href="https://monev.maganghub.kemnaker.go.id/dashboard/peserta" target="_blank" style="color:#60a5fa; text-decoration:none;">monev.maganghub.kemnaker.go.id/dashboard/peserta</a></p>
+          </div>
+          <div id="kemnaker-session-badge"></div>
+        </div>
+
+        <div class="form-grid">
+          <!-- Otomasi Login Browser -->
+          <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <h3 style="font-size: 1rem; margin-bottom: 12px; color:#93c5fd;">Opsi 1: Otomasi Login (Puppeteer + Chrome)</h3>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px;">
+              Sistem akan membuka browser lokal, masuk ke SSO Kemnaker (account.kemnaker.go.id), dan mengumpulkan sesi login MagangHub secara otomatis.
+            </p>
+            <form id="form-kemnaker-login">
+              <div class="form-group">
+                <label class="form-label" for="kemnaker-email">Email / NIK Akun Kemnaker</label>
+                <input type="text" id="kemnaker-email" class="form-input" placeholder="contoh: hr@perusahaan.co.id atau NIK" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="kemnaker-password">Password Kemnaker</label>
+                <input type="password" id="kemnaker-password" class="form-input" placeholder="••••••••••••" required>
+              </div>
+              <div class="form-group">
+                <label class="checkbox-pill">
+                  <input type="checkbox" id="kemnaker-headless">
+                  <span>Sembunyikan jendela browser (Headless Mode)</span>
+                </label>
+                <div class="form-hint">Tip: Jangan centang jika Kemnaker meminta verifikasi CAPTCHA atau OTP, agar Anda bisa menyelesaikannya di layar.</div>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width: 100%;">
+                🚀 Jalankan Login Otomatis & Simpan Sesi
+              </button>
+            </form>
+          </div>
+
+          <!-- Direct Bearer Token Input -->
+          <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <h3 style="font-size: 1rem; margin-bottom: 12px; color:#34d399;">Opsi 2: Input Bearer Token Langsung</h3>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px;">
+              Jika Anda sudah login di browser kantor, salin Token dari DevTools (Network tab -> monev-api.maganghub.kemnaker.go.id -> Header Authorization: Bearer ...).
+            </p>
+            <form id="form-save-token">
+              <div class="form-group">
+                <label class="form-label" for="kemnaker-bearer-token">Bearer Token (JWT)</label>
+                <textarea id="kemnaker-bearer-token" class="form-textarea" placeholder="eyJhbGciOi..." style="min-height: 85px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;"></textarea>
+                <div class="form-hint">Token ini digunakan langsung untuk memanggil API presensi tanpa membuka browser.</div>
+              </div>
+              <button type="submit" class="btn btn-secondary" style="width: 100%;">
+                💾 Simpan Bearer Token
+              </button>
+            </form>
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Terakhir disinkronkan:</span>
+                <div id="kemnaker-last-sync-text" style="font-weight: 600; font-size: 0.85rem;">Belum pernah</div>
+              </div>
+              <button id="btn-sync-now" class="btn btn-primary btn-sm">
+                🔄 Cek & Sync Sekarang
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 3: Pengaturan WhatsApp & Template -->
+    <section id="tab-whatsapp" class="tab-pane">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Pengaturan WhatsApp Gateway & Template Notifikasi</h2>
+            <p class="panel-subtitle">Atur penyedia layanan pengiriman pesan WhatsApp dan sesuaikan format pengingat untuk anak magang.</p>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+          <!-- Konfigurasi Gateway -->
+          <div>
+            <form id="form-wa-config">
+              <div class="form-group">
+                <label class="form-label" for="wa-provider">Penyedia Layanan (WhatsApp Gateway)</label>
+                <select id="wa-provider" class="form-select">
+                  <option value="simulation">🧪 Mode Simulasi / Direct Click-to-Chat (Gratis, Langsung Pakai)</option>
+                  <option value="fonnte">📱 Fonnte API (fonnte.com - Populer Indonesia)</option>
+                  <option value="wablas">📱 Wablas API (wablas.com)</option>
+                  <option value="custom_webhook">🔗 Custom Webhook API</option>
+                </select>
+                <div class="form-hint">Mode Simulasi memungkinkan Anda menguji pengiriman dan menggunakan tombol "Chat WA" langsung tanpa kuota API berbayar.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="wa-fonnte-token">Fonnte API Token</label>
+                <input type="text" id="wa-fonnte-token" class="form-input" placeholder="Masukkan token akun Fonnte Anda">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="wa-wablas-token">Wablas API Token</label>
+                <input type="text" id="wa-wablas-token" class="form-input" placeholder="Masukkan token akun Wablas Anda">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="wa-deadline-time">Batas Jam Presensi (Deadline)</label>
+                <input type="text" id="wa-deadline-time" class="form-input" value="10:00" placeholder="contoh: 10:00">
+                <div class="form-hint">Jam ini akan dicantumkan di dalam pesan pengingat kepada anak magang.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="wa-template-input">Template Pesan WhatsApp</label>
+                <textarea id="wa-template-input" class="form-textarea" style="min-height: 160px;"></textarea>
+                <div class="form-hint">
+                  Placeholder tersedia: <code>{nama}</code>, <code>{tanggal}</code>, <code>{jam}</code>, <code>{posisi}</code>, <code>{kampus}</code>, <code>{deadline}</code>, <code>{link_absen}</code>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-whatsapp" style="width: 100%;">
+                💾 Simpan Pengaturan WhatsApp
+              </button>
+            </form>
+          </div>
+
+          <!-- Preview & Testing Section -->
+          <div>
+            <h3 style="font-size: 0.95rem; margin-bottom: 12px; color: var(--text-secondary);">Pratinjau Pesan di WhatsApp</h3>
+            <div class="wa-preview-box">
+              <div class="wa-bubble">
+                <div id="wa-preview-text">Memuat pratinjau pesan...</div>
+                <div class="wa-bubble-time">09:00 ✓✓</div>
+              </div>
+            </div>
+
+            <!-- Testing Box -->
+            <div style="background: rgba(255,255,255,0.02); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-top: 20px;">
+              <h4 style="font-size: 0.9rem; margin-bottom: 8px;">Uji Coba Pengiriman Pesan</h4>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px;">Kirim pesan uji coba ke nomor WhatsApp Anda untuk memastikan gateway bekerja.</p>
+              <div class="form-group">
+                <input type="text" id="wa-admin-phone" class="form-input" placeholder="Nomor WA (contoh: 081234567890)">
+              </div>
+              <button type="button" id="btn-test-wa" class="btn btn-secondary" style="width: 100%;">
+                📲 Kirim Pesan Tes Sekarang
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 4: Jadwal Otomatis (Cron) -->
+    <section id="tab-scheduler" class="tab-pane">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Pengaturan Jadwal Otomatis (Cron Job)</h2>
+            <p class="panel-subtitle">Sistem akan mengecek absensi Kemnaker dan mengirim pengingat secara terjadwal di latar belakang.</p>
+          </div>
+        </div>
+
+        <form id="form-scheduler" style="max-width: 650px;">
+          <div class="form-group">
+            <label class="checkbox-pill" style="padding: 10px 16px; font-weight: 600;">
+              <input type="checkbox" id="scheduler-enabled" checked>
+              <span>Aktifkan Pengingat Otomatis di Latar Belakang</span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="scheduler-time">Jam Pengecekan & Pengingat (WIB)</label>
+            <input type="time" id="scheduler-time" class="form-input" style="max-width: 200px;" value="09:00">
+            <div class="form-hint">Disarankan diatur 30 - 60 menit sebelum batas jam masuk pemagangan (misal pukul 09:00 WIB).</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Hari Kerja Aktif</label>
+            <div class="checkbox-group">
+              <label class="checkbox-pill"><input type="checkbox" name="active-days" value="Senin" checked> Senin</label>
+              <label class="checkbox-pill"><input type="checkbox" name="active-days" value="Selasa" checked> Selasa</label>
+              <label class="checkbox-pill"><input type="checkbox" name="active-days" value="Rabu" checked> Rabu</label>
+              <label class="checkbox-pill"><input type="checkbox" name="active-days" value="Kamis" checked> Kamis</label>
+              <label class="checkbox-pill"><input type="checkbox" name="active-days" value="Jumat" checked> Jumat</label>
+              <label class="checkbox-pill"><input type="checkbox" name="active-days" value="Sabtu"> Sabtu</label>
+            </div>
+            <div class="form-hint">Pengingat hanya akan berjalan pada hari-hari yang dicentang.</div>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn btn-primary">
+              💾 Simpan Jadwal Scheduler
+            </button>
+            <button type="button" id="btn-trigger-manual-cycle" class="btn btn-secondary">
+              ⚡ Jalankan Siklus Sekarang Secara Manual
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Tab 5: Riwayat & Log Aktivitas -->
+    <section id="tab-logs" class="tab-pane">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Audit Trail & Log Aktivitas Sistem</h2>
+            <p class="panel-subtitle">Catatan riwayat proses login, sinkronisasi data Kemnaker, dan status pengiriman reminder WhatsApp.</p>
+          </div>
+          <div class="toolbar">
+            <button id="btn-refresh-logs" class="btn btn-secondary btn-sm">🔄 Refresh Log</button>
+            <button id="btn-clear-logs" class="btn btn-danger btn-sm">🗑️ Bersihkan Log</button>
+          </div>
+        </div>
+
+        <div class="log-terminal" id="log-terminal-output">
+          <!-- Populated dynamically via app.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Modal Edit Peserta Magang -->
+    <div id="modal-edit-intern" class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">Edit Data & Kontak Peserta Magang</h3>
+          <button id="btn-close-modal" class="modal-close">&times;</button>
+        </div>
+        <form id="form-edit-intern">
+          <input type="hidden" id="edit-intern-id">
+          <div class="form-group">
+            <label class="form-label" for="edit-intern-name">Nama Peserta</label>
+            <input type="text" id="edit-intern-name" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-intern-phone">Nomor WhatsApp</label>
+            <input type="text" id="edit-intern-phone" class="form-input" placeholder="contoh: 081298765431" required>
+            <div class="form-hint">Nomor ini digunakan untuk mengirim pesan pengingat absensi.</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-intern-mentor">Pembimbing / Mentor Perusahaan</label>
+            <input type="text" id="edit-intern-mentor" class="form-input" placeholder="Nama mentor / divisi">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-intern-status">Status Presensi Manual (Override)</label>
+            <select id="edit-intern-status" class="form-select">
+              <option value="belum_absen">⚠️ Belum Absen</option>
+              <option value="hadir">✓ Hadir</option>
+              <option value="izin">Izin</option>
+              <option value="sakit">Sakit</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
