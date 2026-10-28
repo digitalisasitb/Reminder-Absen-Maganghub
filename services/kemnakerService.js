@@ -319,10 +319,17 @@ async function performBrowserLogin(customCredentials = {}) {
     });
 
     const defaultPhones = {
-      'Khoirul Fazri Nurrokhman': '081298765431',
-      'MUHAMAD ILHAM RYAN KUSUMA': '081387654321',
-      'Muhammad Parhan': '089654321098',
-      'Shabrina Dzakiyah Adani': '085712348899'
+      'Khoirul Fazri Nurrokhman': '085221393477',
+      'MUHAMAD ILHAM RYAN KUSUMA': '085156824580',
+      'Muhammad Parhan': '081368372775',
+      'Shabrina Dzakiyah Adani': '0895392047904'
+    };
+
+    const defaultEmails = {
+      'Khoirul Fazri Nurrokhman': 'khoirulfazri16@gmail.com',
+      'MUHAMAD ILHAM RYAN KUSUMA': 'milhamryank@gmail.com',
+      'Muhammad Parhan': 'muhparhan565@gmail.com',
+      'Shabrina Dzakiyah Adani': 'shabrinadzakiyah@gmail.com'
     };
 
     let idx = 1;
@@ -338,7 +345,7 @@ async function performBrowserLogin(customCredentials = {}) {
         batch: item.batch,
         pembimbing: 'Mentor Muhammad (PT Rekayasa Industri)',
         phone: item.scrapedPhone || phoneMap.get(name) || defaultPhones[name] || '',
-        email: item.scrapedEmail || emailMap.get(name) || '',
+        email: item.scrapedEmail || emailMap.get(name) || defaultEmails[name] || '',
         statusAbsen: item.isBelumAbsen ? 'belum_absen' : 'hadir',
         jamAbsen: item.isBelumAbsen ? '-' : '08:00 WIB',
         keterangan: item.alertText,
