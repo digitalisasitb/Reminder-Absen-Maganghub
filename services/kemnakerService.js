@@ -242,7 +242,7 @@ async function performBrowserLogin(customCredentials = {}) {
         }
 
         if (detailUrl) {
-          addLog('sync', 'info', `Membuka detail profil peserta ${p.nama}...`);
+          addLog('sync', 'info', `Membuka URL detail profil ${p.nama}...`);
           const detailPage = await browser.newPage();
           await detailPage.goto(detailUrl, { waitUntil: 'networkidle2', timeout: 20000 });
           await new Promise(r => setTimeout(r, 2000));
@@ -261,6 +261,31 @@ async function performBrowserLogin(customCredentials = {}) {
           if (contact.phone) p.scrapedPhone = contact.phone;
 
           await detailPage.close().catch(() => {});
+        } else {
+          // If no direct href (e.g. Vuetify card click event @click)
+          const cards = await page.$$('.v-card, [class*="ParticipantListCard"], [class*="card"]');
+          if (cards[p.cardIndex]) {
+            addLog('sync', 'info', `Mengklik kartu ${p.nama} untuk membaca profil...`);
+            await cards[p.cardIndex].click();
+            await new Promise(r => setTimeout(r, 2500));
+
+            const contact = await page.evaluate(() => {
+              const body = document.body.innerText || '';
+              const emailMatch = body.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+              const phoneMatch = body.match(/(\+62|62|08)[0-9]{8,13}/);
+              return {
+                email: emailMatch ? emailMatch[0] : null,
+                phone: phoneMatch ? phoneMatch[0] : null
+              };
+            });
+
+            if (contact.email) p.scrapedEmail = contact.email;
+            if (contact.phone) p.scrapedPhone = contact.phone;
+
+            // Return back to dashboard/peserta list
+            await page.goBack({ waitUntil: 'networkidle2', timeout: 20000 }).catch(() => {});
+            await new Promise(r => setTimeout(r, 2000));
+          }
         }
       } catch (detErr) {
         // Continue if single participant detail timeout
