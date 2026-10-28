@@ -326,10 +326,12 @@ async function performBrowserLogin(customCredentials = {}) {
  */
 async function syncAttendanceData() {
   const config = getConfig();
-  const email = (config.kemnaker && config.kemnaker.email) || '0811917603';
-  const password = (config.kemnaker && config.kemnaker.password) || 'Tb#12345';
+  const kemnakerCfg = config.kemnaker || {};
+  const email = process.env.KEMNAKER_PHONE || kemnakerCfg.email || '0811917603';
+  const password = process.env.KEMNAKER_PASS || kemnakerCfg.password || 'Tb#12345';
+  const isHeadless = process.env.CI ? true : (kemnakerCfg.headless ?? true);
 
-  return performBrowserLogin({ email, password, headless: false });
+  return performBrowserLogin({ email, password, headless: isHeadless });
 }
 
 module.exports = {
