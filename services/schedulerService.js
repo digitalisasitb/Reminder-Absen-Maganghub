@@ -115,9 +115,10 @@ async function runNightReminderCycle(isManual = false) {
     }
 
     // Send Email to Mentor and Interns
+    const targetMentorEmail = process.env.MENTOR_EMAIL || (config.email && config.email.mentorEmail) || 'mentor.rekind@gmail.com';
     const emailRes = await sendNightReminderEmails({
       unclockedInterns,
-      mentorEmail: (config.email && config.email.mentorEmail) || 'mentor@rekayasa.co.id',
+      mentorEmail: targetMentorEmail,
       scheduleTime: '21:00'
     });
 
