@@ -229,9 +229,11 @@ async function performBrowserLogin(customCredentials = {}) {
     // Deduplicate by name
     const existingInterns = getInterns();
     const phoneMap = new Map();
+    const emailMap = new Map();
     const reminderMap = new Map();
     existingInterns.forEach(i => {
       if (i.phone) phoneMap.set(i.nama, i.phone);
+      if (i.email) emailMap.set(i.nama, i.email);
       if (i.lastReminderSent) reminderMap.set(i.nama, { sent: i.lastReminderSent, count: i.reminderCount });
     });
 
@@ -270,6 +272,7 @@ async function performBrowserLogin(customCredentials = {}) {
         batch: item.batch,
         pembimbing: 'Mentor Muhammad (PT Rekayasa Industri)',
         phone: phoneMap.get(name) || defaultPhones[name] || '',
+        email: emailMap.get(name) || '',
         statusAbsen: item.isBelumAbsen ? 'belum_absen' : 'hadir',
         jamAbsen: item.isBelumAbsen ? '-' : '08:00 WIB',
         keterangan: item.alertText,
