@@ -104,8 +104,9 @@ async function sendWhatsAppMessage({ phone, message, internName = 'Peserta' }) {
 
   // 2. Fonnte API Gateway
   if (provider === 'fonnte') {
-    if (!waConfig.fonnteToken) {
-      const errorMsg = 'Token Fonnte belum dikonfigurasi di Pengaturan.';
+    const fonnteToken = process.env.FONNTE_TOKEN || waConfig.fonnteToken;
+    if (!fonnteToken) {
+      const errorMsg = 'Token Fonnte belum dikonfigurasi di Pengaturan / Environment Variables.';
       addLog('reminder', 'error', errorMsg);
       return { success: false, error: errorMsg };
     }

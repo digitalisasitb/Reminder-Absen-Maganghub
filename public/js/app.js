@@ -218,7 +218,8 @@ function renderInternsTable() {
           </div>
         </td>
         <td>
-          <div><strong>${item.phone || '<em style="color:#f87171">Belum ada</em>'}</strong></div>
+          <div><strong>${item.phone || '<em style="color:#f87171">Belum ada WA</em>'}</strong></div>
+          <div style="font-size:0.75rem; color:#60a5fa">${item.email || '<em style="color:var(--text-muted)">Email belum diset</em>'}</div>
           <div style="font-size:0.75rem; color:var(--text-muted)">Mentor: ${item.pembimbing || '-'}</div>
         </td>
         <td>${statusBadge}</td>
@@ -578,6 +579,7 @@ window.openEditModal = function (id) {
   document.getElementById('edit-intern-id').value = intern.id;
   document.getElementById('edit-intern-name').value = intern.nama;
   document.getElementById('edit-intern-phone').value = intern.phone || '';
+  document.getElementById('edit-intern-email').value = intern.email || '';
   document.getElementById('edit-intern-mentor').value = intern.pembimbing || '';
   document.getElementById('edit-intern-status').value = intern.statusAbsen || 'belum_absen';
 
@@ -593,6 +595,7 @@ async function handleSaveEditIntern(e) {
   e.preventDefault();
   const id = document.getElementById('edit-intern-id').value;
   const phone = document.getElementById('edit-intern-phone').value;
+  const email = document.getElementById('edit-intern-email').value;
   const nama = document.getElementById('edit-intern-name').value;
   const pembimbing = document.getElementById('edit-intern-mentor').value;
   const statusAbsen = document.getElementById('edit-intern-status').value;
@@ -601,7 +604,7 @@ async function handleSaveEditIntern(e) {
     const res = await fetch(`/api/interns/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone, nama, pembimbing, statusAbsen })
+      body: JSON.stringify({ phone, email, nama, pembimbing, statusAbsen })
     });
     const json = await res.json();
     if (json.success) {

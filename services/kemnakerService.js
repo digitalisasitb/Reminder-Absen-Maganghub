@@ -229,9 +229,11 @@ async function performBrowserLogin(customCredentials = {}) {
     // Deduplicate by name
     const existingInterns = getInterns();
     const phoneMap = new Map();
+    const emailMap = new Map();
     const reminderMap = new Map();
     existingInterns.forEach(i => {
       if (i.phone) phoneMap.set(i.nama, i.phone);
+      if (i.email) emailMap.set(i.nama, i.email);
       if (i.lastReminderSent) reminderMap.set(i.nama, { sent: i.lastReminderSent, count: i.reminderCount });
     });
 
@@ -270,6 +272,7 @@ async function performBrowserLogin(customCredentials = {}) {
         batch: item.batch,
         pembimbing: 'Mentor Muhammad (PT Rekayasa Industri)',
         phone: phoneMap.get(name) || defaultPhones[name] || '',
+        email: emailMap.get(name) || '',
         statusAbsen: item.isBelumAbsen ? 'belum_absen' : 'hadir',
         jamAbsen: item.isBelumAbsen ? '-' : '08:00 WIB',
         keterangan: item.alertText,
@@ -326,10 +329,12 @@ async function performBrowserLogin(customCredentials = {}) {
  */
 async function syncAttendanceData() {
   const config = getConfig();
-  const email = (config.kemnaker && config.kemnaker.email) || '0811917603';
-  const password = (config.kemnaker && config.kemnaker.password) || 'Tb#12345';
+  const kemnakerCfg = config.kemnaker || {};
+  const email = process.env.KEMNAKER_PHONE || kemnakerCfg.email || '0811917603';
+  const password = process.env.KEMNAKER_PASS || kemnakerCfg.password || 'Tb#12345';
+  const isHeadless = process.env.CI ? true : (kemnakerCfg.headless ?? true);
 
-  return performBrowserLogin({ email, password, headless: false });
+  return performBrowserLogin({ email, password, headless: isHeadless });
 }
 
 module.exports = {

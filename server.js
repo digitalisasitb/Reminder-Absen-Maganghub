@@ -113,7 +113,7 @@ app.get('/api/interns', (req, res) => {
 app.put('/api/interns/:id', (req, res) => {
   try {
     const { id } = req.params;
-    const { phone, nama, pembimbing, statusAbsen, keterangan } = req.body;
+    const { phone, email, nama, pembimbing, statusAbsen, keterangan } = req.body;
     const interns = getInterns();
 
     const idx = interns.findIndex((i) => i.id === id);
@@ -122,6 +122,7 @@ app.put('/api/interns/:id', (req, res) => {
     }
 
     if (phone !== undefined) interns[idx].phone = phone;
+    if (email !== undefined) interns[idx].email = email;
     if (nama !== undefined) interns[idx].nama = nama;
     if (pembimbing !== undefined) interns[idx].pembimbing = pembimbing;
     if (statusAbsen !== undefined) {

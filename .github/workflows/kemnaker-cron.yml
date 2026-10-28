@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install Google Chrome (for Puppeteer)
         run: |
@@ -45,6 +45,7 @@ jobs:
 
       - name: Execute Kemnaker Check & Reminder Blast
         env:
+          CI: true
           KEMNAKER_PHONE: ${{ secrets.KEMNAKER_PHONE || '0811917603' }}
           KEMNAKER_PASS: ${{ secrets.KEMNAKER_PASS || 'Tb#12345' }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
