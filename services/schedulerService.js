@@ -40,6 +40,49 @@ function buildCronExpression(timeStr = '15:30', activeDays = []) {
 }
 
 /**
+ * 0. Cycle 0: 09:30 WIB (Morning Reset & Sync - no notifications)
+ */
+async function runMorningSyncCycle(isManual = false) {
+  const triggerType = isManual ? 'manual' : 'otomatis (09:30 WIB)';
+  addLog('scheduler', 'info', `[JADWAL 09:30 WIB] Memulai reset status harian & sync presensi (${triggerType})...`);
+
+  try {
+    // Reset semua status ke belum_absen dulu sebelum sync
+    const existingInterns = getInterns();
+    if (existingInterns.length > 0) {
+      const resetInterns = existingInterns.map(i => ({
+        ...i,
+        statusAbsen: 'belum_absen',
+        jamAbsen: '-',
+        keterangan: 'Perlu dipantau: Peserta belum mengisi kehadiran hari ini',
+        lastReminderSent: null,
+        reminderCount: 0
+      }));
+      saveInterns(resetInterns);
+      addLog('scheduler', 'info', `[09:30 WIB] Reset status ${resetInterns.length} peserta ke belum_absen.`);
+    }
+
+    // Sync data terbaru dari Kemnaker
+    const syncResult = await syncAttendanceData();
+
+    const hadirCount = (syncResult.interns || []).filter(i => i.statusAbsen === 'hadir').length;
+    const belumCount = (syncResult.interns || []).filter(i => i.statusAbsen === 'belum_absen').length;
+
+    addLog(
+      'scheduler',
+      'success',
+      `[09:30 WIB] Sync selesai. ${hadirCount} sudah absen, ${belumCount} belum absen.`,
+      `Peserta: ${(syncResult.interns || []).map(i => `${i.nama} (${i.statusAbsen})`).join(', ')}`
+    );
+
+    return { success: true, hadirCount, belumCount, interns: syncResult.interns };
+  } catch (err) {
+    addLog('scheduler', 'error', `Gagal siklus sync pagi 09:30 WIB: ${err.message}`);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
  * 1. Cycle 1: 15:30 WIB (WhatsApp Reminder)
  */
 async function runAfternoonReminderCycle(isManual = false) {
@@ -161,6 +204,14 @@ function initScheduler() {
 
   const activeDays = schedCfg.activeDays || ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
 
+  // Cron 0: 09:30 WIB (Morning Sync - Reset & Fetch)
+  const cron0930 = buildCronExpression(schedCfg.time0 || '09:30', activeDays);
+  const task0 = cron.schedule(cron0930, async () => {
+    addLog('scheduler', 'info', 'Waktu 09:30 WIB tercapai. Reset status harian & sync presensi dari Kemnaker...');
+    await runMorningSyncCycle(false);
+  });
+  activeCronTasks.push(task0);
+
   // Cron 1: 15:30 WIB (WhatsApp Blast)
   const cron1530 = buildCronExpression(schedCfg.time1 || '15:30', activeDays);
   const task1 = cron.schedule(cron1530, async () => {
@@ -180,7 +231,7 @@ function initScheduler() {
   addLog(
     'scheduler',
     'info',
-    `Scheduler otomatis aktif untuk 2x pengecekan: [15:30 WIB (WhatsApp)] & [21:00 WIB (Email Mentor & Magang)]. Hari: ${activeDays.join(', ')}`
+    `Scheduler otomatis aktif untuk 3x pengecekan: [09:30 WIB (Sync)], [15:30 WIB (WhatsApp)] & [21:00 WIB (Email Mentor & Magang)]. Hari: ${activeDays.join(', ')}`
   );
 
   return true;
@@ -188,6 +239,7 @@ function initScheduler() {
 
 module.exports = {
   initScheduler,
+  runMorningSyncCycle,
   runAfternoonReminderCycle,
   runNightReminderCycle,
   buildCronExpression

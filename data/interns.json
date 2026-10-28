@@ -6,12 +6,13 @@
     "kampus": "PT Rekayasa Industri",
     "batch": "Batch 2 · 21 Sep 2026 - 20 Mar 2027",
     "pembimbing": "Mentor Muhammad (PT Rekayasa Industri)",
-    "phone": "081298765431",
-    "statusAbsen": "hadir",
-    "jamAbsen": "08:00 WIB",
-    "keterangan": "Hadir",
-    "lastReminderSent": "2026-10-27T04:26:17.140Z",
-    "reminderCount": 2
+    "phone": "085221393477",
+    "email": "khoirulfazri16@gmail.com",
+    "statusAbsen": "belum_absen",
+    "jamAbsen": "-",
+    "keterangan": "Perlu dipantau: Peserta belum mengisi kehadiran hari ini",
+    "lastReminderSent": null,
+    "reminderCount": 0
   },
   {
     "id": "MGN-002",
@@ -20,12 +21,13 @@
     "kampus": "PT Rekayasa Industri",
     "batch": "Batch 2 · 21 Sep 2026 - 20 Mar 2027",
     "pembimbing": "Mentor Muhammad (PT Rekayasa Industri)",
-    "phone": "081387654321",
+    "phone": "085156824580",
+    "email": "milhamryank@gmail.com",
     "statusAbsen": "belum_absen",
     "jamAbsen": "-",
     "keterangan": "Perlu dipantau: Peserta belum mengisi kehadiran hari ini",
-    "lastReminderSent": "2026-10-27T03:11:59.460Z",
-    "reminderCount": 1
+    "lastReminderSent": null,
+    "reminderCount": 0
   },
   {
     "id": "MGN-003",
@@ -34,12 +36,13 @@
     "kampus": "PT Rekayasa Industri",
     "batch": "Batch 2 · 21 Sep 2026 - 20 Mar 2027",
     "pembimbing": "Mentor Muhammad (PT Rekayasa Industri)",
-    "phone": "089654321098",
-    "statusAbsen": "hadir",
-    "jamAbsen": "08:00 WIB",
-    "keterangan": "Hadir",
-    "lastReminderSent": "2026-10-27T03:11:59.461Z",
-    "reminderCount": 1
+    "phone": "081368372775",
+    "email": "muhparhan565@gmail.com",
+    "statusAbsen": "belum_absen",
+    "jamAbsen": "-",
+    "keterangan": "Perlu dipantau: Peserta belum mengisi kehadiran hari ini",
+    "lastReminderSent": null,
+    "reminderCount": 0
   },
   {
     "id": "MGN-004",
@@ -48,11 +51,12 @@
     "kampus": "PT Rekayasa Industri",
     "batch": "Batch 2 · 21 Sep 2026 - 20 Mar 2027",
     "pembimbing": "Mentor Muhammad (PT Rekayasa Industri)",
-    "phone": "085712348899",
-    "statusAbsen": "hadir",
-    "jamAbsen": "08:00 WIB",
-    "keterangan": "Hadir",
-    "lastReminderSent": "2026-10-27T03:11:59.462Z",
-    "reminderCount": 1
+    "phone": "0895392047904",
+    "email": "shabrinadzakiyah@gmail.com",
+    "statusAbsen": "belum_absen",
+    "jamAbsen": "-",
+    "keterangan": "Perlu dipantau: Peserta belum mengisi kehadiran hari ini",
+    "lastReminderSent": null,
+    "reminderCount": 0
   }
 ]
