@@ -180,7 +180,7 @@ async function performBrowserLogin(customCredentials = {}) {
 
     addLog('sync', 'info', 'Mengekstrak kartu peserta magang dan status presensi...');
 
-    // Extract participants from page DOM
+    // Extract participants from page DOM along with their detail links
     const rawParticipants = await page.evaluate(() => {
       const results = [];
       const cardElements = document.querySelectorAll('.v-card, [class*="ParticipantListCard"], [class*="card"]');
@@ -213,18 +213,84 @@ async function performBrowserLogin(customCredentials = {}) {
 
           const isBelumAbsen = text.includes('belum mengisi kehadiran') || text.includes('Perlu dipantau');
 
+          // Check for link / participant ID attribute
+          const anchor = card.querySelector('a') || card.closest('a');
+          const href = anchor ? anchor.getAttribute('href') : '';
+
           results.push({
             nama,
             posisi: posisi || 'Peserta Magang Batch 2',
             batch: batch || 'Batch 2 · 21 Sep 2026 - 20 Mar 2027',
             isBelumAbsen,
-            alertText: alertText || (isBelumAbsen ? 'Perlu dipantau: Peserta belum mengisi kehadiran hari ini' : 'Hadir')
+            alertText: alertText || (isBelumAbsen ? 'Perlu dipantau: Peserta belum mengisi kehadiran hari ini' : 'Hadir'),
+            href: href || '',
+            cardIndex: idx
           });
         }
       });
 
       return results;
     });
+
+    // Check detail profile for each participant to scrape email & phone if missing
+    for (let i = 0; i < rawParticipants.length; i++) {
+      const p = rawParticipants[i];
+      try {
+        let detailUrl = '';
+        if (p.href && p.href.includes('participant=')) {
+          detailUrl = p.href.startsWith('http') ? p.href : `https://monev.maganghub.kemnaker.go.id${p.href}`;
+        }
+
+        if (detailUrl) {
+          addLog('sync', 'info', `Membuka URL detail profil ${p.nama}...`);
+          const detailPage = await browser.newPage();
+          await detailPage.goto(detailUrl, { waitUntil: 'networkidle2', timeout: 20000 });
+          await new Promise(r => setTimeout(r, 2000));
+
+          const contact = await detailPage.evaluate(() => {
+            const body = document.body.innerText || '';
+            const emailMatch = body.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+            const phoneMatch = body.match(/(\+62|62|08)[0-9]{8,13}/);
+            return {
+              email: emailMatch ? emailMatch[0] : null,
+              phone: phoneMatch ? phoneMatch[0] : null
+            };
+          });
+
+          if (contact.email) p.scrapedEmail = contact.email;
+          if (contact.phone) p.scrapedPhone = contact.phone;
+
+          await detailPage.close().catch(() => {});
+        } else {
+          // If no direct href (e.g. Vuetify card click event @click)
+          const cards = await page.$$('.v-card, [class*="ParticipantListCard"], [class*="card"]');
+          if (cards[p.cardIndex]) {
+            addLog('sync', 'info', `Mengklik kartu ${p.nama} untuk membaca profil...`);
+            await cards[p.cardIndex].click();
+            await new Promise(r => setTimeout(r, 2500));
+
+            const contact = await page.evaluate(() => {
+              const body = document.body.innerText || '';
+              const emailMatch = body.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+              const phoneMatch = body.match(/(\+62|62|08)[0-9]{8,13}/);
+              return {
+                email: emailMatch ? emailMatch[0] : null,
+                phone: phoneMatch ? phoneMatch[0] : null
+              };
+            });
+
+            if (contact.email) p.scrapedEmail = contact.email;
+            if (contact.phone) p.scrapedPhone = contact.phone;
+
+            // Return back to dashboard/peserta list
+            await page.goBack({ waitUntil: 'networkidle2', timeout: 20000 }).catch(() => {});
+            await new Promise(r => setTimeout(r, 2000));
+          }
+        }
+      } catch (detErr) {
+        // Continue if single participant detail timeout
+      }
+    }
 
     // Deduplicate by name
     const existingInterns = getInterns();
@@ -271,8 +337,8 @@ async function performBrowserLogin(customCredentials = {}) {
         kampus: 'PT Rekayasa Industri',
         batch: item.batch,
         pembimbing: 'Mentor Muhammad (PT Rekayasa Industri)',
-        phone: phoneMap.get(name) || defaultPhones[name] || '',
-        email: emailMap.get(name) || '',
+        phone: item.scrapedPhone || phoneMap.get(name) || defaultPhones[name] || '',
+        email: item.scrapedEmail || emailMap.get(name) || '',
         statusAbsen: item.isBelumAbsen ? 'belum_absen' : 'hadir',
         jamAbsen: item.isBelumAbsen ? '-' : '08:00 WIB',
         keterangan: item.alertText,
