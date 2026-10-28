@@ -45,6 +45,7 @@ jobs:
 
       - name: Execute Kemnaker Check & Reminder Blast
         env:
+          CI: true
           KEMNAKER_PHONE: ${{ secrets.KEMNAKER_PHONE || '0811917603' }}
           KEMNAKER_PASS: ${{ secrets.KEMNAKER_PASS || 'Tb#12345' }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
