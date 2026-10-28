@@ -83,6 +83,8 @@ async function sendNightReminderEmails({ unclockedInterns, mentorEmail, schedule
 
   // 2. Real SMTP Delivery
   try {
+    const senderEmail = process.env.SMTP_USER || emailCfg.user;
+
     // A. Send Summary Email to Mentor
     const internListHtml = unclockedInterns.map((i, idx) => `
       <tr style="border-bottom: 1px solid #e2e8f0;">
@@ -94,7 +96,7 @@ async function sendNightReminderEmails({ unclockedInterns, mentorEmail, schedule
     `).join('');
 
     const mentorMailOptions = {
-      from: `"Monev Kemnaker Reminder" <${emailCfg.user}>`,
+      from: `"Monev Kemnaker Reminder" <${senderEmail}>`,
       to: targetMentor,
       subject: `🚨 [Monev Kemnaker] Peringatan Jam ${scheduleTime} WIB: ${unclockedInterns.length} Anak Magang Belum Absen`,
       html: `
@@ -137,7 +139,7 @@ async function sendNightReminderEmails({ unclockedInterns, mentorEmail, schedule
       if (intern.email) {
         try {
           await transporter.sendMail({
-            from: `"Monev Magang Kemnaker" <${emailCfg.user}>`,
+            from: `"Monev Magang Kemnaker" <${senderEmail}>`,
             to: intern.email,
             subject: `⚠️ PENTING: Kamu Belum Absen di Portal Kemnaker Hari Ini (${dateFormatted})`,
             html: `
