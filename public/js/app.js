@@ -111,6 +111,9 @@ function renderStatusOverview(data) {
   const stats = data.stats || {};
   document.getElementById('stat-total-interns').textContent = stats.total || 0;
   document.getElementById('stat-hadir-interns').textContent = stats.hadir || 0;
+  if (document.getElementById('stat-izin-interns')) {
+    document.getElementById('stat-izin-interns').textContent = stats.izinSakit || 0;
+  }
   document.getElementById('stat-belum-absen').textContent = stats.belumAbsen || 0;
   document.getElementById('badge-unclocked-count').textContent = stats.belumAbsen || 0;
 
