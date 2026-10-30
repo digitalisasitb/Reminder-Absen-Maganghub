@@ -135,6 +135,17 @@ async function performBrowserLogin(customCredentials = {}) {
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 850 });
 
+    // Samarkan User-Agent dan hilangkan tanda otomatisasi navigator.webdriver
+    await page.setUserAgent(
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+    );
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+      window.chrome = { runtime: {} };
+      Object.defineProperty(navigator, 'languages', { get: () => ['id-ID', 'id', 'en-US', 'en'] });
+      Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+    });
+
     // Pasang session cookies jika tersedia (untuk bypass Cloudflare & SSO)
     const rawCookie = customCredentials.cookie || process.env.KEMNAKER_COOKIE || kemnakerCfg.sessionCookie || '';
     if (rawCookie) {
@@ -161,6 +172,19 @@ async function performBrowserLogin(customCredentials = {}) {
 
     await page.goto(PESERTA_URL, { waitUntil: 'networkidle2', timeout: 60000 });
     await sleep(2000);
+
+    // Jika masuk ke halaman verifikasi Cloudflare ("Performing security verification"),
+    // beri waktu 5-8 detik agar Cloudflare memverifikasi fingerprint Chrome asli & otomatis redirect
+    for (let c = 0; c < 6; c++) {
+      const isCfChallenge = await page.evaluate(() => {
+        const txt = document.body ? document.body.innerText : '';
+        return txt.includes('security verification') || txt.includes('verifies you are not a bot');
+      }).catch(() => false);
+
+      if (!isCfChallenge) break;
+      await addLog('auth', 'info', `Menunggu verifikasi keamanan otomatis (${c + 1}/6)...`);
+      await sleep(2500);
+    }
 
     if (/account\.kemnaker\.go\.id|login|auth/.test(page.url())) {
       await addLog('auth', 'info', 'Mengisi kredensial SSO Kemnaker...');
