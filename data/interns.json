@@ -28,10 +28,10 @@
     "pembimbing": "Muhammad Islahuddin (PT Rekayasa Industri)",
     "phone": "085156824580",
     "email": "milhamryank@gmail.com",
-    "statusAbsen": "belum_absen",
+    "statusAbsen": "hadir",
     "statusDate": "2026-10-30",
-    "jamAbsen": "-",
-    "keterangan": "Belum mengisi kehadiran hari ini",
+    "jamAbsen": "18:48 WIB",
+    "keterangan": "Hadir",
     "lastReminderSent": "2026-10-30T09:16:00.802Z",
     "reminderCount": 2
   },
