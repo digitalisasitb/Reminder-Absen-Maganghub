@@ -135,6 +135,30 @@ async function performBrowserLogin(customCredentials = {}) {
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 850 });
 
+    // Pasang session cookies jika tersedia (untuk bypass Cloudflare & SSO)
+    const rawCookie = customCredentials.cookie || process.env.KEMNAKER_COOKIE || kemnakerCfg.sessionCookie || '';
+    if (rawCookie) {
+      const cookieList = [];
+      const parts = rawCookie.split(';').map((c) => c.trim()).filter(Boolean);
+      for (const part of parts) {
+        const eqIdx = part.indexOf('=');
+        if (eqIdx > 0) {
+          const name = part.slice(0, eqIdx).trim();
+          const value = part.slice(eqIdx + 1).trim();
+          cookieList.push({
+            name,
+            value,
+            domain: name === 'cf_clearance' ? '.kemnaker.go.id' : 'monev.maganghub.kemnaker.go.id',
+            path: '/'
+          });
+        }
+      }
+      if (cookieList.length > 0) {
+        await page.setCookie(...cookieList);
+        await addLog('auth', 'info', `Menginjeksi ${cookieList.length} session cookie (termasuk Cloudflare bypass)...`);
+      }
+    }
+
     await page.goto(PESERTA_URL, { waitUntil: 'networkidle2', timeout: 60000 });
     await sleep(2000);
 
