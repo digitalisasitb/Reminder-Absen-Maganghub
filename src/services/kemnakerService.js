@@ -426,6 +426,7 @@ async function syncViaDirectApi(token) {
       posisi: p.job_role || 'Peserta Magang Batch 2',
       kampus: p.internship_company || 'PT Rekayasa Industri',
       batch: `Batch ${p.internship_batch_name || '2'}`,
+      photoUrl: p.photo_url || '',
       pembimbing: p.mentor_name ? `${p.mentor_name} (${p.internship_company || 'PT Rekayasa Industri'})` : (prev && prev.pembimbing) || 'Mentor Muhammad',
       phone: p.phone_number || (prev && prev.phone) || DEFAULT_PHONES[name] || '',
       email: p.email || (prev && prev.email) || DEFAULT_EMAILS[name] || '',

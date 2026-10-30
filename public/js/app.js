@@ -194,6 +194,8 @@ function renderInternsTable() {
       let statusBadge = '';
       if (item.statusAbsen === 'hadir') {
         statusBadge = '<span class="badge badge-success">✓ Sudah Absen</span>';
+      } else if (item.statusAbsen === 'izin') {
+        statusBadge = `<span class="badge badge-info" title="${item.keterangan || 'Izin/Sakit'}">📋 Izin / Sakit</span>`;
       } else if (item.statusAbsen === 'belum_absen') {
         statusBadge = '<span class="badge badge-warning">⚠️ Belum Absen</span>';
       } else {
@@ -206,11 +208,15 @@ function renderInternsTable() {
         .map((n) => n[0])
         .join('');
 
+      const avatarHtml = item.photoUrl
+        ? `<img src="${item.photoUrl}" alt="${item.nama}" class="avatar" style="object-fit:cover;" onerror="this.outerHTML='<div class=\\'avatar\\'>${initials}</div>'">`
+        : `<div class="avatar">${initials}</div>`;
+
       return `
       <tr>
         <td>
           <div class="intern-profile">
-            <div class="avatar">${initials}</div>
+            ${avatarHtml}
             <div class="intern-info">
               <div class="name">${item.nama}</div>
               <div class="sub">${item.posisi || '-'} • ${item.kampus || '-'}</div>
@@ -224,9 +230,10 @@ function renderInternsTable() {
         </td>
         <td>${statusBadge}</td>
         <td>
-          <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 500;">
             ${item.jamAbsen || '-'}
           </span>
+          ${item.keterangan && item.statusAbsen === 'izin' ? `<div style="font-size:0.7rem; color:var(--text-muted); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${item.keterangan}">${item.keterangan}</div>` : ''}
         </td>
         <td>
           <span style="font-size: 0.8rem; color: ${item.reminderCount > 0 ? '#34d399' : 'var(--text-muted)'};">
