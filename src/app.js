@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
+const path = require('path');
 
 const {
   performBrowserLogin,
@@ -237,5 +238,8 @@ app.delete('/api/logs', wrap(async (req, res) => {
   await clearLogs();
   res.json({ success: true, message: 'Log berhasil dibersihkan' });
 }));
+
+// Dashboard statis (dipakai lokal maupun Vercel)
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 module.exports = app;
