@@ -24,9 +24,9 @@ function getBrowserExecutablePath(preferredPath) {
  *  - Lokal / CI         : Chrome / Edge terinstall
  */
 async function launchBrowser({ headless = true, preferredPath } = {}) {
-  const puppeteer = require('puppeteer-core');
+  const puppeteer = (await import('puppeteer-core')).default;
   if (process.env.VERCEL) {
-    const chromium = require('@sparticuz/chromium');
+    const chromium = (await import('@sparticuz/chromium')).default;
     return puppeteer.launch({
       args: chromium.args,
       executablePath: await chromium.executablePath(),
