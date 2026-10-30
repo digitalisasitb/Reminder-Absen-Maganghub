@@ -56,6 +56,34 @@ app.all('/api/cron/:job', async (req, res) => {
   res.status(result.success ? 200 : 500).json({ ...result, interns: undefined });
 });
 
+// ----------------- WEBHOOK UNTUK MENERIMA HASIL SYNC DARI GITHUB ACTIONS -----------------
+app.post('/api/sync/webhook', async (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  const bearer = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  if (!secret || !safeEqual(bearer, secret)) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
+  }
+
+  try {
+    const { interns, config, job } = req.body;
+    if (Array.isArray(interns) && interns.length > 0) {
+      await saveInterns(interns);
+    }
+    if (config && typeof config === 'object') {
+      await saveConfig(config);
+    }
+    await addLog(
+      'sync',
+      'success',
+      `[Webhook] Data presensi berhasil diperbarui oleh GitHub Actions (Siklus: ${job || 'manual'}).`,
+      interns ? `Total ${interns.length} peserta diterima.` : undefined
+    );
+    res.json({ success: true, message: 'Data presensi berhasil disinkronkan' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // ----------------- ADMIN AUTH (Basic Auth, aktif jika ADMIN_PASSWORD diset) -----------------
 app.use('/api', (req, res, next) => {
   const password = process.env.ADMIN_PASSWORD;
@@ -165,6 +193,33 @@ app.post('/api/kemnaker/login', wrap(async (req, res) => {
 }));
 
 app.post('/api/kemnaker/sync', wrap(async (req, res) => {
+  const ghToken = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
+  const ghRepo = process.env.GITHUB_REPOSITORY || 'digitalisasitb/Reminder-Absen-Maganghub';
+
+  if (ghToken) {
+    try {
+      const axios = require('axios');
+      await axios.post(
+        `https://api.github.com/repos/${ghRepo}/actions/workflows/kemnaker-cron.yml/dispatches`,
+        { ref: 'main', inputs: { job: 'morning' } },
+        {
+          headers: {
+            Authorization: `Bearer ${ghToken}`,
+            Accept: 'application/vnd.github+json'
+          },
+          timeout: 10000
+        }
+      );
+      await addLog('sync', 'info', 'Pemicu sinkronisasi berhasil dikirim ke GitHub Actions Runner!');
+      return res.json({
+        success: true,
+        message: 'Sinkronisasi dimulai di background via GitHub Actions! Data akan terupdate otomatis dalam 1-2 menit.'
+      });
+    } catch (ghErr) {
+      console.warn('[Sync] Gagal dispatch GitHub Actions, fallback ke browser sync:', ghErr.message);
+    }
+  }
+
   const result = await syncAttendanceData();
   res.json({ success: true, result });
 }));

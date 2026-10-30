@@ -1,41 +1,91 @@
-name: Kemnaker Magang Reminder (Scheduler)
+name: Kemnaker Magang Reminder (Auto Cron & Sync)
 
-# GitHub Actions hanya bertugas MEMICU endpoint di Vercel.
-# (Vercel Hobby hanya mengizinkan cron 1x/hari, sedangkan kita butuh 3x/hari.)
 on:
   schedule:
-    - cron: '30 2 * * 1-5'   # 09:30 WIB - sync pagi
-    - cron: '30 8 * * 1-5'   # 15:30 WIB - WhatsApp reminder
-    - cron: '0 14 * * 1-5'   # 21:00 WIB - Email mentor & peserta
+    # 09:30 WIB = 02:30 UTC (Senin - Jumat) - Morning sync
+    - cron: '30 2 * * 1-5'
+    # 15:30 WIB = 08:30 UTC (Senin - Jumat) - WhatsApp reminder & sync
+    - cron: '30 8 * * 1-5'
+    # 21:00 WIB = 14:00 UTC (Senin - Jumat) - Email to Mentor & sync
+    - cron: '0 14 * * 1-5'
   workflow_dispatch:
     inputs:
       job:
-        description: 'Job yang dijalankan'
+        description: 'Siklus yang ingin dijalankan'
         required: true
-        default: night
+        default: 'morning'
         type: choice
-        options: [morning, afternoon, night]
+        options:
+          - morning
+          - afternoon
+          - night
+
+permissions:
+  contents: write
 
 jobs:
-  trigger:
+  run-reminder:
     runs-on: ubuntu-latest
     steps:
-      - name: Tentukan job
-        run: |
-          case "${{ github.event.schedule }}" in
-            "30 2 * * 1-5") JOB=morning ;;
-            "30 8 * * 1-5") JOB=afternoon ;;
-            "0 14 * * 1-5") JOB=night ;;
-            *) JOB="${{ github.event.inputs.job }}" ;;
-          esac
-          echo "JOB=$JOB" >> "$GITHUB_ENV"
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Panggil endpoint Vercel
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Google Chrome Asli (Bypass Cloudflare)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget gnupg
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable || true
+
+      - name: Install Dependencies
+        run: npm ci || npm install
+
+      - name: Tentukan Siklus Berdasarkan Jadwal
+        id: schedule-check
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "JOB=${{ github.event.inputs.job }}" >> $GITHUB_ENV
+          else
+            HOUR=$(date -u +%H)
+            MIN=$(date -u +%M)
+            if [ "$HOUR" -eq 2 ] && [ "$MIN" -lt 45 ]; then
+              echo "JOB=morning" >> $GITHUB_ENV
+            elif [ "$HOUR" -ge 12 ]; then
+              echo "JOB=night" >> $GITHUB_ENV
+            else
+              echo "JOB=afternoon" >> $GITHUB_ENV
+            fi
+          fi
+
+      - name: Jalankan Siklus Presensi Kemnaker
         env:
+          CI: true
+          KEMNAKER_PHONE: ${{ secrets.KEMNAKER_PHONE || '0811917603' }}
+          KEMNAKER_PASS: ${{ secrets.KEMNAKER_PASS || 'Tb#12345' }}
+          KEMNAKER_COOKIE: ${{ secrets.KEMNAKER_COOKIE }}
+          FONNTE_TOKEN: ${{ secrets.FONNTE_TOKEN }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MENTOR_EMAIL: ${{ secrets.MENTOR_EMAIL || 'mentor.rekind@gmail.com' }}
           APP_URL: ${{ secrets.APP_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          echo "Menjalankan job: $JOB"
-          curl -fsS --retry 2 --retry-delay 15 --max-time 300 \
-            -H "Authorization: Bearer $CRON_SECRET" \
-            "$APP_URL/api/cron/$JOB"
+          echo "Menjalankan siklus: $JOB WIB..."
+          node scripts/run-cycle.js --job=$JOB
+
+      - name: Commit & Simpan Hasil Sync ke Repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/interns.json data/config.json data/logs.json || true
+          git diff --staged --quiet || git commit -m "chore: auto-sync presensi $JOB $(date +'%Y-%m-%d %H:%M WIB')"
+          git push || true
