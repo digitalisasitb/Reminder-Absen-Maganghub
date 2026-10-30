@@ -9,7 +9,7 @@
     "browserPath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
     "targetUrl": "https://monev.maganghub.kemnaker.go.id/dashboard/peserta",
     "loginUrl": "https://account.kemnaker.go.id/auth/login",
-    "lastSync": "2026-10-30T03:26:15.291Z",
+    "lastSync": "2026-10-30T08:36:05.937Z",
     "syncStatus": "authenticated"
   },
   "whatsapp": {
@@ -43,7 +43,7 @@
       "Jumat"
     ],
     "autoSendReminder": true,
-    "lastRunAfternoon": null,
+    "lastRunAfternoon": "2026-10-30T08:36:05.939Z",
     "lastRunNight": null,
     "time": "15:30"
   }

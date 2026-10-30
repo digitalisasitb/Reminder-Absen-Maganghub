@@ -10,10 +10,10 @@
     "pembimbing": "Muhammad Islahuddin (PT Rekayasa Industri)",
     "phone": "085221393477",
     "email": "khoirulfazri16@gmail.com",
-    "statusAbsen": "belum_absen",
+    "statusAbsen": "hadir",
     "statusDate": "2026-10-30",
-    "jamAbsen": "-",
-    "keterangan": "Belum mengisi kehadiran hari ini",
+    "jamAbsen": "15:03 WIB",
+    "keterangan": "Hadir",
     "lastReminderSent": null,
     "reminderCount": 0
   },
@@ -32,8 +32,8 @@
     "statusDate": "2026-10-30",
     "jamAbsen": "-",
     "keterangan": "Belum mengisi kehadiran hari ini",
-    "lastReminderSent": null,
-    "reminderCount": 0
+    "lastReminderSent": "2026-10-30T08:36:05.939Z",
+    "reminderCount": 1
   },
   {
     "id": "MGN-003",
@@ -64,10 +64,10 @@
     "pembimbing": "Muhammad Islahuddin (PT Rekayasa Industri)",
     "phone": "0895392047904",
     "email": "shabrinadzakiyah@gmail.com",
-    "statusAbsen": "belum_absen",
+    "statusAbsen": "hadir",
     "statusDate": "2026-10-30",
-    "jamAbsen": "-",
-    "keterangan": "Belum mengisi kehadiran hari ini",
+    "jamAbsen": "15:06 WIB",
+    "keterangan": "Hadir",
     "lastReminderSent": null,
     "reminderCount": 0
   }
