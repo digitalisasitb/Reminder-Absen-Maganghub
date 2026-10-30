@@ -78,9 +78,6 @@ function initEventListeners() {
   document.getElementById('btn-refresh-logs')?.addEventListener('click', loadLogs);
   document.getElementById('btn-clear-logs')?.addEventListener('click', handleClearLogs);
 
-  // Modal edit intern
-  document.getElementById('form-edit-intern')?.addEventListener('submit', handleSaveEditIntern);
-  document.getElementById('btn-close-modal')?.addEventListener('click', closeModal);
 }
 
 // Load Initial Data
@@ -263,9 +260,6 @@ function renderInternsTable() {
             }
             <button class="btn btn-secondary btn-sm" onclick="openDailyLogsModal('${item.id}')" title="Lihat Logbook Harian Peserta" style="border-color: rgba(96, 165, 250, 0.4); color: #93c5fd;">
               📖 Logbook
-            </button>
-            <button class="btn btn-secondary btn-sm btn-icon" onclick="openEditModal('${item.id}')" title="Edit Data & Kontak">
-              ✏️
             </button>
           </div>
         </td>
@@ -583,26 +577,7 @@ async function handleTestWa() {
   }
 }
 
-// 6. Modal Edit Intern
-window.openEditModal = function (id) {
-  const intern = state.interns.find((i) => i.id === id);
-  if (!intern) return;
-  state.selectedIntern = intern;
 
-  document.getElementById('edit-intern-id').value = intern.id;
-  document.getElementById('edit-intern-name').value = intern.nama;
-  document.getElementById('edit-intern-phone').value = intern.phone || '';
-  document.getElementById('edit-intern-email').value = intern.email || '';
-  document.getElementById('edit-intern-mentor').value = intern.pembimbing || '';
-  document.getElementById('edit-intern-status').value = intern.statusAbsen || 'belum_absen';
-
-  document.getElementById('modal-edit-intern').classList.add('active');
-};
-
-function closeModal() {
-  document.getElementById('modal-edit-intern').classList.remove('active');
-  state.selectedIntern = null;
-}
 
 // 6b. Modal View Daily Logs (Logbook Harian dari Monev API)
 window.openDailyLogsModal = async function (id) {
@@ -710,34 +685,6 @@ window.closeLogbookModal = function () {
 };
 
 
-async function handleSaveEditIntern(e) {
-  e.preventDefault();
-  const id = document.getElementById('edit-intern-id').value;
-  const phone = document.getElementById('edit-intern-phone').value;
-  const email = document.getElementById('edit-intern-email').value;
-  const nama = document.getElementById('edit-intern-name').value;
-  const pembimbing = document.getElementById('edit-intern-mentor').value;
-  const statusAbsen = document.getElementById('edit-intern-status').value;
-
-  try {
-    const res = await fetch(`/api/interns/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone, email, nama, pembimbing, statusAbsen })
-    });
-    const json = await res.json();
-    if (json.success) {
-      showToast('Data peserta berhasil disimpan!', 'success');
-      closeModal();
-      await loadInterns();
-      await loadStatus();
-    } else {
-      showToast('Gagal update: ' + json.error, 'error');
-    }
-  } catch (err) {
-    showToast('Error: ' + err.message, 'error');
-  }
-}
 
 // 7. Activity Logs
 async function loadLogs() {

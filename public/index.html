@@ -358,49 +358,6 @@
       </div>
     </section>
 
-    <!-- Modal Edit Peserta Magang -->
-    <div id="modal-edit-intern" class="modal-overlay">
-      <div class="modal-card">
-        <div class="modal-header">
-          <h3 class="modal-title">Edit Data & Kontak Peserta Magang</h3>
-          <button id="btn-close-modal" class="modal-close">&times;</button>
-        </div>
-        <form id="form-edit-intern">
-          <input type="hidden" id="edit-intern-id">
-          <div class="form-group">
-            <label class="form-label" for="edit-intern-name">Nama Peserta</label>
-            <input type="text" id="edit-intern-name" class="form-input" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="edit-intern-phone">Nomor WhatsApp</label>
-            <input type="text" id="edit-intern-phone" class="form-input" placeholder="contoh: 081298765431" required>
-            <div class="form-hint">Nomor ini digunakan untuk mengirim pesan pengingat absensi WhatsApp.</div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="edit-intern-email">Email Peserta Magang</label>
-            <input type="email" id="edit-intern-email" class="form-input" placeholder="contoh: nama.magang@gmail.com">
-            <div class="form-hint">Digunakan untuk mengirim email peringatan presensi pada pukul 21:00 WIB.</div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="edit-intern-mentor">Pembimbing / Mentor Perusahaan</label>
-            <input type="text" id="edit-intern-mentor" class="form-input" placeholder="Nama mentor / divisi">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="edit-intern-status">Status Presensi Manual (Override)</label>
-            <select id="edit-intern-status" class="form-select">
-              <option value="belum_absen">⚠️ Belum Absen</option>
-              <option value="hadir">✓ Hadir</option>
-              <option value="izin">Izin</option>
-              <option value="sakit">Sakit</option>
-            </select>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
-            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-          </div>
-        </form>
-      </div>
-    </div>
 
     <!-- Modal View Daily Logs / Logbook -->
     <div id="modal-daily-logs" class="modal-backdrop">
