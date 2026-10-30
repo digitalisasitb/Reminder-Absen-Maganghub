@@ -3,13 +3,13 @@
     "email": "0811917603",
     "password": "",
     "authMode": "browser",
-    "bearerToken": "",
+    "bearerToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzUxMiJ9.eyJjbGllbnQiOiI3OTIzMDg5MS1jYzAyLTQzYzgtOTY0Yy1iNTI1YmNlMjc4NTciLCJ1c2VyIjoiNDZmODFhZTEtM2UyYi00ZjlkLTgxMGMtMWZhY2RlODM5YTg4IiwidHRsIjoyMTYwMCwic3ViIjoiYjM1ZGEzMDEtYjMxMS00OTBlLWE3NzgtZmY1MmY0NWY1ZWJiIiwiYXVkIjoiNzkyMzA4OTEtY2MwMi00M2M4LTk2NGMtYjUyNWJjZTI3ODU3IiwiZmluZ2VycHJpbnQiOiI2NGJkOTkwODgxMDQ1ODk3OGExNmI1MzExNGY2M2QwOGUwZjkyNzUwIn0.Yxz9U4xs_A4uhn1Osjo_OcEUh9owPd2-fm0OSPH9TjN2OVIbjpUPtFnMyl6FOnBtqf33m08j4FyoO9ODFCOQEs5HBMrQdA9db4p0Aii83Bmx25mnmTHgoXYkYD23u66kVWrSRHiLXrDqpNzkty2C6EEGU5EQvVV9OyUF_S6p6QssL50FhIIPx_AhrknBNsJ4kEG8BoxtKibvCu5Swaa6um6In_rDYR3SEd3ccdQxK-uEbc2gf8rUHMlxqVDENPtcGnTSLX81I9-cMP9KdGeCYJ4_73G3ryKH_tBLZLIvPZj0JK8SsyAJm8jW_1Mocd-FTjpATgNcR2kdwbe49txs0NhEFIJyIXETzwUbv0uH1-FxCvXzEf1oupTOxnxlrsTky8GQj8AlyDDi0xyhvFJj4Jkr1Tqb98ny5KQkH0SYwBiquQPs84IVnyyiqt5lb-bu1DekCBaU7BHWxGp5PaVTUw8jyWdlO-vJQ0lQ1yj9V3nlDGR827QVbOxD4raXXklf6pQpikgdKHPQrot7O28Nicq8tfB18GCsjQEl0ZNgbDw0cn2P4YH7oSnkPP1onLyZmXtsoBWNaGqGBX5_Dfnq-0m8hpMAy-T4b3_BTw4c6opeB2jfs_ywcxiYzDNpbxQaBPNT6U8VTJLepNmirL9KLGA_sHpVQMEIArg1T1iGfJc",
     "sessionCookie": "",
     "headless": false,
     "browserPath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
     "targetUrl": "https://monev.maganghub.kemnaker.go.id/dashboard/peserta",
     "loginUrl": "https://account.kemnaker.go.id/auth/login",
-    "lastSync": "2026-10-28T07:53:11.729Z",
+    "lastSync": "2026-10-30T03:26:15.291Z",
     "syncStatus": "authenticated"
   },
   "whatsapp": {

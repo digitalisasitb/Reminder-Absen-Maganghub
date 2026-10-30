@@ -344,8 +344,134 @@ async function performBrowserLogin(customCredentials = {}) {
   }
 }
 
+/**
+ * Sinkronisasi Langsung via REST API Monev Kemnaker (Cepat, Akurat, 100% Anti Cloudflare)
+ */
+async function syncViaDirectApi(token) {
+  const axios = require('axios');
+  const today = wibDate(); // YYYY-MM-DD
+  const cleanToken = token.trim().replace(/^Bearer\s+/i, '');
+
+  await addLog('sync', 'info', 'Menghubungi Monev API Kemnaker secara langsung...');
+
+  const headers = {
+    accept: '*/*',
+    authorization: `Bearer ${cleanToken}`,
+    origin: 'https://monev.maganghub.kemnaker.go.id',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36',
+    'x-frontend-build-id': 'e77b4e10ebce5ee3dfad1b9f16c7f86ca561569d-production'
+  };
+
+  // 1. Tarik daftar peserta
+  const partRes = await axios.get('https://monev-api.maganghub.kemnaker.go.id/api/v1/users/participants?page=1&limit=25', {
+    headers,
+    timeout: 10000
+  });
+
+  const participants = (partRes.data && partRes.data.data) || [];
+  if (!participants.length) {
+    throw new Error('Daftar peserta kosong dari API Monev Kemnaker.');
+  }
+
+  const existingInterns = await getInterns();
+  const prevByName = new Map(existingInterns.map((i) => [i.nama, i]));
+  const finalInterns = [];
+
+  let idx = 1;
+  for (const p of participants) {
+    const name = p.name;
+    const prev = prevByName.get(name);
+    const sameDay = prev && prev.statusDate === today;
+
+    let statusAbsen = 'belum_absen';
+    let jamAbsen = '-';
+    let keterangan = 'Belum mengisi kehadiran hari ini';
+
+    // 2. Tarik status presensi asli hari ini untuk peserta ini
+    try {
+      const attUrl = `https://monev-api.maganghub.kemnaker.go.id/api/v1/attendances?participant_id=${p.id}&start_date=${today}&end_date=${today}`;
+      const attRes = await axios.get(attUrl, { headers, timeout: 8000 });
+      const attList = (attRes.data && attRes.data.data) || [];
+
+      if (attList.length > 0) {
+        const att = attList[0];
+        if (att.status === 'PRESENT') {
+          statusAbsen = 'hadir';
+          keterangan = 'Hadir';
+          if (att.created_at) {
+            const d = new Date(att.created_at);
+            jamAbsen = `${wibTime(d)} WIB`;
+          } else {
+            jamAbsen = '08:00 WIB';
+          }
+        } else if (att.status === 'ON_LEAVE') {
+          statusAbsen = 'izin';
+          keterangan = att.leave_reason || 'Izin/Sakit';
+          jamAbsen = 'Izin';
+        }
+      }
+    } catch (attErr) {
+      // Jika attendance gagal ditarik, pertahankan status sebelumnya jika sameDay
+      if (sameDay && prev.statusAbsen === 'hadir') {
+        statusAbsen = 'hadir';
+        jamAbsen = prev.jamAbsen;
+        keterangan = prev.keterangan || 'Hadir';
+      }
+    }
+
+    finalInterns.push({
+      id: (prev && prev.id) || `MGN-${String(idx++).padStart(3, '0')}`,
+      participantId: p.id,
+      nama: name,
+      posisi: p.job_role || 'Peserta Magang Batch 2',
+      kampus: p.internship_company || 'PT Rekayasa Industri',
+      batch: `Batch ${p.internship_batch_name || '2'}`,
+      pembimbing: p.mentor_name ? `${p.mentor_name} (${p.internship_company || 'PT Rekayasa Industri'})` : (prev && prev.pembimbing) || 'Mentor Muhammad',
+      phone: p.phone_number || (prev && prev.phone) || DEFAULT_PHONES[name] || '',
+      email: p.email || (prev && prev.email) || DEFAULT_EMAILS[name] || '',
+      statusAbsen,
+      statusDate: today,
+      jamAbsen,
+      keterangan,
+      lastReminderSent: sameDay ? prev.lastReminderSent || null : null,
+      reminderCount: sameDay ? prev.reminderCount || 0 : 0
+    });
+  }
+
+  await saveInterns(finalInterns);
+
+  const config = await getConfig();
+  config.kemnaker = config.kemnaker || {};
+  config.kemnaker.bearerToken = cleanToken;
+  config.kemnaker.lastSync = new Date().toISOString();
+  config.kemnaker.syncStatus = 'authenticated';
+  await saveConfig(config);
+
+  const unclockedCount = finalInterns.filter((i) => i.statusAbsen === 'belum_absen').length;
+  await addLog(
+    'sync',
+    'success',
+    `[Direct API] Berhasil menarik ${finalInterns.length} peserta magang via REST API Monev!`,
+    `Peserta: ${finalInterns.map((i) => `${i.nama} (${i.statusAbsen} - ${i.jamAbsen})`).join(', ')}`
+  );
+
+  return { success: true, interns: finalInterns, unclockedCount, mode: 'api' };
+}
+
 /** Sinkronisasi data presensi (dipakai semua siklus terjadwal) */
 async function syncAttendanceData() {
+  const config = await getConfig();
+  const token = process.env.KEMNAKER_BEARER_TOKEN || (config.kemnaker && config.kemnaker.bearerToken);
+
+  // Jika token tersedia, gunakan Direct API (sangat cepat & anti Cloudflare)
+  if (token) {
+    try {
+      return await syncViaDirectApi(token);
+    } catch (apiErr) {
+      await addLog('sync', 'warn', `Direct API gagal (${apiErr.message}), mencoba fallback browser...`);
+    }
+  }
+
   return performBrowserLogin({});
 }
 
