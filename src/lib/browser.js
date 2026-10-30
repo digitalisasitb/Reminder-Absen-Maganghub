@@ -1,5 +1,4 @@
 const fs = require('fs');
-const puppeteer = require('puppeteer-core');
 
 const LOCAL_CANDIDATES = [
   '/usr/bin/google-chrome-stable',
@@ -25,6 +24,7 @@ function getBrowserExecutablePath(preferredPath) {
  *  - Lokal / CI         : Chrome / Edge terinstall
  */
 async function launchBrowser({ headless = true, preferredPath } = {}) {
+  const puppeteer = require('puppeteer-core');
   if (process.env.VERCEL) {
     const chromium = require('@sparticuz/chromium');
     return puppeteer.launch({
