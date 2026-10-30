@@ -1,24 +1,16 @@
 const nodemailer = require('nodemailer');
-const fs = require('fs');
-const path = require('path');
+const store = require('../lib/store');
 const { addLog } = require('./logService');
 
-const CONFIG_FILE = path.join(__dirname, '..', 'data', 'config.json');
-
-function getConfig() {
-  try {
-    const data = fs.readFileSync(CONFIG_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch (e) {
-    return {};
-  }
+async function getConfig() {
+  return (await store.get('config', {})) || {};
 }
 
 /**
  * Create Nodemailer Transporter based on config
  */
-function createTransporter() {
-  const config = getConfig();
+async function createTransporter() {
+  const config = await getConfig();
   const emailCfg = (config && config.email) || {};
 
   const user = process.env.SMTP_USER || emailCfg.user;
@@ -43,13 +35,14 @@ function createTransporter() {
  * Send Email notification to mentor and unclocked interns
  */
 async function sendNightReminderEmails({ unclockedInterns, mentorEmail, scheduleTime = '21:00' }) {
-  const config = getConfig();
+  const config = await getConfig();
   const emailCfg = (config && config.email) || {};
   const targetMentor = mentorEmail || emailCfg.mentorEmail || 'mentor@rekayasa.co.id';
-  const transporter = createTransporter();
+  const transporter = await createTransporter();
 
   const now = new Date();
   const dateFormatted = now.toLocaleDateString('id-ID', {
+    timeZone: 'Asia/Jakarta',
     weekday: 'long',
     day: 'numeric',
     month: 'long',

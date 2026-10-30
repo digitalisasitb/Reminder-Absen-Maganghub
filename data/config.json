@@ -1,7 +1,7 @@
 {
   "kemnaker": {
     "email": "0811917603",
-    "password": "Tb#12345",
+    "password": "",
     "authMode": "browser",
     "bearerToken": "",
     "sessionCookie": "",
@@ -9,7 +9,7 @@
     "browserPath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
     "targetUrl": "https://monev.maganghub.kemnaker.go.id/dashboard/peserta",
     "loginUrl": "https://account.kemnaker.go.id/auth/login",
-    "lastSync": "2026-10-27T08:48:22.470Z",
+    "lastSync": "2026-10-28T07:53:11.729Z",
     "syncStatus": "authenticated"
   },
   "whatsapp": {

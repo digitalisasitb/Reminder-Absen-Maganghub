@@ -8,19 +8,11 @@
     "pembimbing": "Mentor Muhammad (PT Rekayasa Industri)",
     "phone": "085221393477",
     "email": "khoirulfazri16@gmail.com",
-<<<<<<< HEAD
-    "statusAbsen": "belum_absen",
-    "jamAbsen": "-",
-    "keterangan": "Perlu dipantau: Peserta belum mengisi kehadiran hari ini",
-    "lastReminderSent": null,
-    "reminderCount": 0
-=======
     "statusAbsen": "hadir",
     "jamAbsen": "08:00 WIB",
     "keterangan": "Hadir",
-    "lastReminderSent": "2026-10-27T04:26:17.140Z",
-    "reminderCount": 2
->>>>>>> 8b819380b38639172ea0277f9d61b9a539047a6a
+    "lastReminderSent": null,
+    "reminderCount": 0
   },
   {
     "id": "MGN-002",
@@ -46,19 +38,11 @@
     "pembimbing": "Mentor Muhammad (PT Rekayasa Industri)",
     "phone": "081368372775",
     "email": "muhparhan565@gmail.com",
-<<<<<<< HEAD
-    "statusAbsen": "belum_absen",
-    "jamAbsen": "-",
-    "keterangan": "Perlu dipantau: Peserta belum mengisi kehadiran hari ini",
-    "lastReminderSent": null,
-    "reminderCount": 0
-=======
     "statusAbsen": "hadir",
     "jamAbsen": "08:00 WIB",
     "keterangan": "Hadir",
-    "lastReminderSent": "2026-10-27T03:11:59.461Z",
-    "reminderCount": 1
->>>>>>> 8b819380b38639172ea0277f9d61b9a539047a6a
+    "lastReminderSent": null,
+    "reminderCount": 0
   },
   {
     "id": "MGN-004",
@@ -69,18 +53,10 @@
     "pembimbing": "Mentor Muhammad (PT Rekayasa Industri)",
     "phone": "0895392047904",
     "email": "shabrinadzakiyah@gmail.com",
-<<<<<<< HEAD
     "statusAbsen": "belum_absen",
     "jamAbsen": "-",
     "keterangan": "Perlu dipantau: Peserta belum mengisi kehadiran hari ini",
     "lastReminderSent": null,
     "reminderCount": 0
-=======
-    "statusAbsen": "hadir",
-    "jamAbsen": "08:00 WIB",
-    "keterangan": "Hadir",
-    "lastReminderSent": "2026-10-27T03:11:59.462Z",
-    "reminderCount": 1
->>>>>>> 8b819380b38639172ea0277f9d61b9a539047a6a
   }
 ]

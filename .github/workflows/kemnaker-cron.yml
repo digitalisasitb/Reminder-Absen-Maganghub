@@ -1,76 +1,41 @@
-name: Kemnaker Magang Reminder (Cloud Cron)
+name: Kemnaker Magang Reminder (Scheduler)
 
+# GitHub Actions hanya bertugas MEMICU endpoint di Vercel.
+# (Vercel Hobby hanya mengizinkan cron 1x/hari, sedangkan kita butuh 3x/hari.)
 on:
   schedule:
-    # 09:30 WIB = 02:30 UTC (Senin - Jumat) - Morning sync & reset
-    - cron: '30 2 * * 1-5'
-    # 15:30 WIB = 08:30 UTC (Senin - Jumat) - WhatsApp reminder
-    - cron: '30 8 * * 1-5'
-    # 21:00 WIB = 14:00 UTC (Senin - Jumat) - Email to Mentor & Interns
-    - cron: '0 14 * * 1-5'
+    - cron: '30 2 * * 1-5'   # 09:30 WIB - sync pagi
+    - cron: '30 8 * * 1-5'   # 15:30 WIB - WhatsApp reminder
+    - cron: '0 14 * * 1-5'   # 21:00 WIB - Email mentor & peserta
   workflow_dispatch:
     inputs:
-      target_time:
-        description: 'Jadwal yang ingin dijalankan (09:30, 15:30, atau 21:00)'
+      job:
+        description: 'Job yang dijalankan'
         required: true
-        default: '21:00'
-
-permissions:
-  contents: write
+        default: night
+        type: choice
+        options: [morning, afternoon, night]
 
 jobs:
-  run-reminder:
+  trigger:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install Google Chrome (for Puppeteer)
+      - name: Tentukan job
         run: |
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
+          case "${{ github.event.schedule }}" in
+            "30 2 * * 1-5") JOB=morning ;;
+            "30 8 * * 1-5") JOB=afternoon ;;
+            "0 14 * * 1-5") JOB=night ;;
+            *) JOB="${{ github.event.inputs.job }}" ;;
+          esac
+          echo "JOB=$JOB" >> "$GITHUB_ENV"
 
-      - name: Install Dependencies
-        run: npm ci || npm install
-
-      - name: Determine Schedule Time
-        id: schedule-check
-        run: |
-          HOUR=$(date -u +%H)
-          MIN=$(date -u +%M)
-          if [ "$HOUR" -eq 2 ] && [ "$MIN" -lt 45 ]; then
-            echo "TIME=09:30" >> $GITHUB_ENV
-          elif [ "$HOUR" -ge 12 ]; then
-            echo "TIME=21:00" >> $GITHUB_ENV
-          else
-            echo "TIME=15:30" >> $GITHUB_ENV
-          fi
-
-      - name: Execute Kemnaker Check & Reminder Blast
+      - name: Panggil endpoint Vercel
         env:
-          CI: true
-          KEMNAKER_PHONE: ${{ secrets.KEMNAKER_PHONE || '0811917603' }}
-          KEMNAKER_PASS: ${{ secrets.KEMNAKER_PASS || 'Tb#12345' }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          MENTOR_EMAIL: ${{ secrets.MENTOR_EMAIL || 'mentor.rekind@gmail.com' }}
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          TARGET=${{ github.event.inputs.target_time || env.TIME }}
-          echo "Menjalankan otomasi untuk jadwal: $TARGET WIB..."
-          node sync-and-remind.js --time=$TARGET
-
-      - name: Simpan Hasil Sync ke Repo (khusus 09:30 WIB)
-        if: ${{ env.TIME == '09:30' || github.event.inputs.target_time == '09:30' }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/interns.json data/logs.json || true
-          git diff --staged --quiet || git commit -m "chore: auto-sync presensi pagi $(date +'%Y-%m-%d %H:%M WIB')"
-          git push || true
+          echo "Menjalankan job: $JOB"
+          curl -fsS --retry 2 --retry-delay 15 --max-time 300 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$APP_URL/api/cron/$JOB"

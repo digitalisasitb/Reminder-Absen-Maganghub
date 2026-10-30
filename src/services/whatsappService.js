@@ -1,17 +1,9 @@
 const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
+const store = require('../lib/store');
 const { addLog } = require('./logService');
 
-const CONFIG_FILE = path.join(__dirname, '..', 'data', 'config.json');
-
-function getConfig() {
-  try {
-    const data = fs.readFileSync(CONFIG_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch (e) {
-    return {};
-  }
+async function getConfig() {
+  return (await store.get('config', {})) || {};
 }
 
 /**
@@ -36,12 +28,14 @@ function normalizePhone(phone) {
 function formatMessage(template, intern, deadlineTime = '10:00') {
   const now = new Date();
   const dateFormatted = now.toLocaleDateString('id-ID', {
+    timeZone: 'Asia/Jakarta',
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric'
   });
   const timeFormatted = now.toLocaleTimeString('id-ID', {
+    timeZone: 'Asia/Jakarta',
     hour: '2-digit',
     minute: '2-digit'
   });
@@ -72,7 +66,7 @@ function getDirectWaLink(phone, message) {
  * Send WhatsApp message using the active provider
  */
 async function sendWhatsAppMessage({ phone, message, internName = 'Peserta' }) {
-  const config = getConfig();
+  const config = await getConfig();
   const waConfig = config.whatsapp || {};
   const provider = waConfig.provider || 'simulation';
   const targetPhone = normalizePhone(phone);
@@ -121,7 +115,7 @@ async function sendWhatsAppMessage({ phone, message, internName = 'Peserta' }) {
         },
         {
           headers: {
-            Authorization: waConfig.fonnteToken,
+            Authorization: fonnteToken,
             'Content-Type': 'application/json'
           },
           timeout: 15000

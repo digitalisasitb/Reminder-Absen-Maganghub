@@ -13,3 +13,8 @@ data/logs.json
 
 # Retain initial dummy/template structure for config and intern lists
 # data/config.json should be sanitized or handled via env vars in GitHub Actions
+
+# Vercel
+.vercel/
+.env*.local
+!.env.example
