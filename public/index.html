@@ -402,6 +402,25 @@
       </div>
     </div>
 
+    <!-- Modal View Daily Logs / Logbook -->
+    <div id="modal-daily-logs" class="modal-backdrop">
+      <div class="modal" style="max-width: 700px; width: 90%;">
+        <div class="modal-header">
+          <div>
+            <h3 class="modal-title" id="logbook-modal-title">📖 Logbook Harian Peserta</h3>
+            <p class="panel-subtitle" id="logbook-modal-subtitle">Riwayat aktivitas dan laporan harian dari Monev MagangHub.</p>
+          </div>
+          <button class="btn-close" onclick="closeLogbookModal()">&times;</button>
+        </div>
+        <div id="logbook-modal-content" style="max-height: 65vh; overflow-y: auto; padding: 10px 0;">
+          <!-- Loaded dynamically via app.js -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeLogbookModal()">Tutup</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Notification Container -->
     <div id="toast-container" class="toast-container"></div>
   </div>

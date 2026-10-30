@@ -153,6 +153,48 @@ app.get('/api/interns', wrap(async (req, res) => {
   res.json({ success: true, data: enriched });
 }));
 
+app.get('/api/interns/:id/daily-logs', wrap(async (req, res) => {
+  const { id } = req.params;
+  const interns = await getInterns();
+  const intern = interns.find((i) => i.id === id || i.participantId === id);
+  if (!intern) {
+    return res.status(404).json({ success: false, error: 'Peserta tidak ditemukan' });
+  }
+
+  const config = await getConfig();
+  const token = process.env.KEMNAKER_BEARER_TOKEN || (config.kemnaker && config.kemnaker.bearerToken);
+  if (!token) {
+    return res.status(400).json({ success: false, error: 'Bearer Token Monev Kemnaker belum tersedia' });
+  }
+
+  const pId = intern.participantId || intern.id;
+  const axios = require('axios');
+  const cleanToken = token.trim().replace(/^Bearer\s+/i, '');
+
+  try {
+    const apiRes = await axios.get(
+      `https://monev-api.maganghub.kemnaker.go.id/api/v1/daily-logs?participant_id=${pId}&page=1&limit=10`,
+      {
+        headers: {
+          accept: '*/*',
+          authorization: `Bearer ${cleanToken}`,
+          origin: 'https://monev.maganghub.kemnaker.go.id',
+          'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36'
+        },
+        timeout: 10000
+      }
+    );
+
+    res.json({
+      success: true,
+      intern: { nama: intern.nama, posisi: intern.posisi, photoUrl: intern.photoUrl },
+      data: (apiRes.data && apiRes.data.data) || []
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Gagal mengambil logbook dari Monev Kemnaker: ' + err.message });
+  }
+}));
+
 app.put('/api/interns/:id', wrap(async (req, res) => {
   const { id } = req.params;
   const { phone, email, nama, pembimbing, statusAbsen, keterangan } = req.body;

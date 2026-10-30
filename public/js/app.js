@@ -258,6 +258,9 @@ function renderInternsTable() {
                 </a>
               `
             }
+            <button class="btn btn-secondary btn-sm" onclick="openDailyLogsModal('${item.id}')" title="Lihat Logbook Harian Peserta" style="border-color: rgba(96, 165, 250, 0.4); color: #93c5fd;">
+              📖 Logbook
+            </button>
             <button class="btn btn-secondary btn-sm btn-icon" onclick="openEditModal('${item.id}')" title="Edit Data & Kontak">
               ✏️
             </button>
@@ -597,6 +600,112 @@ function closeModal() {
   document.getElementById('modal-edit-intern').classList.remove('active');
   state.selectedIntern = null;
 }
+
+// 6b. Modal View Daily Logs (Logbook Harian dari Monev API)
+window.openDailyLogsModal = async function (id) {
+  const intern = state.interns.find((i) => i.id === id);
+  const modal = document.getElementById('modal-daily-logs');
+  const title = document.getElementById('logbook-modal-title');
+  const content = document.getElementById('logbook-modal-content');
+
+  if (!modal || !content) return;
+
+  const internName = intern ? intern.nama : 'Peserta';
+  title.innerHTML = `📖 Logbook Harian: <span style="color: #60a5fa;">${internName}</span>`;
+  content.innerHTML = `
+    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+      <div style="font-size: 1.5rem; margin-bottom: 8px;">⏳</div>
+      Sedang mengambil logbook dari Monev Kemnaker...
+    </div>
+  `;
+  modal.classList.add('active');
+
+  try {
+    const res = await fetch(`/api/interns/${id}/daily-logs`);
+    const json = await res.json();
+
+    if (!json.success || !json.data || json.data.length === 0) {
+      content.innerHTML = `
+        <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+          <div style="font-size: 1.5rem; margin-bottom: 8px;">📝</div>
+          Belum ada riwayat logbook harian yang tercatat untuk peserta ini.
+        </div>
+      `;
+      return;
+    }
+
+    content.innerHTML = json.data
+      .map((log) => {
+        const isApproved = log.state === 'APPROVED';
+        const badgeState = isApproved
+          ? '<span class="badge badge-success" style="font-size:0.7rem;">✓ Disetujui Mentor</span>'
+          : `<span class="badge badge-warning" style="font-size:0.7rem;">⏳ ${log.state || 'Menunggu'}</span>`;
+
+        return `
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+            <div style="font-weight: 600; color: #93c5fd; font-size: 0.95rem;">
+              📅 Tanggal: ${log.date}
+            </div>
+            <div>${badgeState}</div>
+          </div>
+          
+          <div style="margin-bottom: 10px;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">
+              💼 Aktivitas / Kegiatan:
+            </div>
+            <div style="font-size: 0.85rem; line-height: 1.5; color: var(--text-primary); white-space: pre-wrap;">
+              ${log.activity_log || '-'}
+            </div>
+          </div>
+
+          ${
+            log.lesson_learned
+              ? `
+            <div style="margin-bottom: 10px; background: rgba(59, 130, 246, 0.05); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #3b82f6;">
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: #93c5fd; font-weight: 600; margin-bottom: 2px;">
+                💡 Pembelajaran / Lesson Learned:
+              </div>
+              <div style="font-size: 0.8rem; line-height: 1.4; color: var(--text-secondary);">
+                ${log.lesson_learned}
+              </div>
+            </div>
+          `
+              : ''
+          }
+
+          ${
+            log.obstacles
+              ? `
+            <div style="background: rgba(239, 68, 68, 0.05); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #ef4444;">
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: #fca5a5; font-weight: 600; margin-bottom: 2px;">
+                ⚠️ Kendala / Hambatan:
+              </div>
+              <div style="font-size: 0.8rem; line-height: 1.4; color: var(--text-secondary);">
+                ${log.obstacles}
+              </div>
+            </div>
+          `
+              : ''
+          }
+        </div>
+      `;
+      })
+      .join('');
+  } catch (err) {
+    content.innerHTML = `
+      <div style="text-align: center; padding: 40px; color: #f87171;">
+        Gagal mengambil data logbook: ${err.message}
+      </div>
+    `;
+  }
+};
+
+window.closeLogbookModal = function () {
+  const modal = document.getElementById('modal-daily-logs');
+  if (modal) modal.classList.remove('active');
+};
+
 
 async function handleSaveEditIntern(e) {
   e.preventDefault();
