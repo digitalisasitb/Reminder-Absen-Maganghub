@@ -166,7 +166,29 @@ async function performBrowserLogin(customCredentials = {}) {
     }
 
     if (/account\.kemnaker\.go\.id|\/login|\/auth/.test(page.url())) {
-      throw new Error('Login Kemnaker gagal (masih di halaman login). Periksa kredensial.');
+      const diag = await page
+        .evaluate(() => {
+          const text = (document.body.innerText || '').replace(/\s+/g, ' ');
+          const alerts = Array.from(
+            document.querySelectorAll('[role="alert"], .alert, .error, .text-danger, .invalid-feedback, .v-messages__message')
+          )
+            .map((e) => (e.innerText || '').trim())
+            .filter(Boolean);
+          const hasCaptcha = !!document.querySelector('iframe[src*="captcha"], .g-recaptcha, [class*="captcha"], iframe[src*="turnstile"]');
+          const hasOtp = /otp|kode verifikasi|verification code/i.test(text);
+          return { alerts: alerts.slice(0, 3), hasCaptcha, hasOtp, snippet: text.slice(0, 200) };
+        })
+        .catch(() => ({ alerts: [], hasCaptcha: false, hasOtp: false, snippet: '' }));
+
+      const hints = [];
+      if (diag.alerts.length) hints.push(`Pesan portal: "${diag.alerts.join(' | ')}"`);
+      if (diag.hasCaptcha) hints.push('Terdeteksi CAPTCHA');
+      if (diag.hasOtp) hints.push('Portal meminta OTP/kode verifikasi');
+      if (!hints.length && diag.snippet) hints.push(`Isi halaman: "${diag.snippet}"`);
+
+      throw new Error(
+        `Login Kemnaker gagal (masih di ${page.url()}). Periksa kredensial. ${hints.join('. ')}`.trim()
+      );
     }
 
     await addLog('sync', 'info', 'Mengekstrak kartu peserta magang dan status presensi...');
