@@ -131,9 +131,9 @@ app.get('/api/status', wrap(async (req, res) => {
       },
       scheduler: {
         enabled: sched.enabled !== undefined ? sched.enabled : true,
-        time: sched.time || '15:30',
+        time: sched.time || '14:30',
         activeDays: sched.activeDays || ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'],
-        cronExpr: buildCronExpression(sched.time || '15:30', sched.activeDays || []),
+        cronExpr: buildCronExpression(sched.time || '14:30', sched.activeDays || []),
         lastRun: sched.lastRunNight || sched.lastRunAfternoon || null
       }
     }

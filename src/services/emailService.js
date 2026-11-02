@@ -34,7 +34,7 @@ async function createTransporter() {
 /**
  * Send Email notification to mentor and unclocked interns
  */
-async function sendNightReminderEmails({ unclockedInterns, mentorEmail, scheduleTime = '21:00' }) {
+async function sendNightReminderEmails({ unclockedInterns, mentorEmail, scheduleTime = '20:00' }) {
   const config = await getConfig();
   const emailCfg = (config && config.email) || {};
   const targetMentor = mentorEmail || emailCfg.mentorEmail || 'mentor@rekayasa.co.id';

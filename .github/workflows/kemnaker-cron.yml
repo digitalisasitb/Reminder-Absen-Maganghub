@@ -2,12 +2,12 @@ name: Kemnaker Magang Reminder (Auto Cron & Sync)
 
 on:
   schedule:
-    # 09:30 WIB = 02:30 UTC (Senin - Jumat) - Morning sync
-    - cron: '30 2 * * 1-5'
-    # 15:30 WIB = 08:30 UTC (Senin - Jumat) - WhatsApp reminder & sync
-    - cron: '30 8 * * 1-5'
-    # 21:00 WIB = 14:00 UTC (Senin - Jumat) - Email to Mentor & sync
-    - cron: '0 14 * * 1-5'
+    # 08:00 WIB = 01:00 UTC (Senin - Jumat) - Morning sync
+    - cron: '0 1 * * 1-5'
+    # 14:30 WIB = 07:30 UTC (Senin - Jumat) - WhatsApp reminder & sync
+    - cron: '30 7 * * 1-5'
+    # 20:00 WIB = 13:00 UTC (Senin - Jumat) - Email to Mentor & sync
+    - cron: '0 13 * * 1-5'
   workflow_dispatch:
     inputs:
       job:
@@ -55,10 +55,9 @@ jobs:
             echo "JOB=${{ github.event.inputs.job }}" >> $GITHUB_ENV
           else
             HOUR=$(date -u +%H)
-            MIN=$(date -u +%M)
-            if [ "$HOUR" -eq 2 ] && [ "$MIN" -lt 45 ]; then
+            if [ "$HOUR" -lt 5 ]; then
               echo "JOB=morning" >> $GITHUB_ENV
-            elif [ "$HOUR" -ge 12 ]; then
+            elif [ "$HOUR" -ge 11 ]; then
               echo "JOB=night" >> $GITHUB_ENV
             else
               echo "JOB=afternoon" >> $GITHUB_ENV

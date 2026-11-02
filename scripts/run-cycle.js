@@ -57,7 +57,7 @@ async function main() {
     job = jobArg.split('=')[1];
   } else if (timeArg) {
     const t = timeArg.split('=')[1];
-    job = t.startsWith('09') ? 'morning' : t.startsWith('21') ? 'night' : 'afternoon';
+    job = t.startsWith('08') || t.startsWith('09') ? 'morning' : t.startsWith('20') || t.startsWith('21') ? 'night' : 'afternoon';
   }
 
   if (!CYCLES[job]) {

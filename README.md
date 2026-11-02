@@ -21,9 +21,9 @@ vercel.json           Rewrite /api/* + maxDuration
 
 | Jam   | Job        | Aksi                                  |
 |-------|------------|---------------------------------------|
-| 09:30 | `morning`   | Sync presensi                         |
-| 15:30 | `afternoon` | Sync ulang → WhatsApp yang belum absen |
-| 21:00 | `night`     | Sync ulang → Email mentor & peserta    |
+| 08:00 | `morning`   | Sync presensi                         |
+| 14:30 | `afternoon` | Sync ulang → WhatsApp yang belum absen |
+| 20:00 | `night`     | Sync ulang → Email mentor & peserta    |
 
 Setiap job selalu **sync ulang dari portal**. Peserta yang sudah `hadir` hari itu
 tidak akan turun lagi menjadi `belum_absen`; jika sync gagal, tidak ada email dikirim.

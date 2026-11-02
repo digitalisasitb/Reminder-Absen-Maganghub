@@ -41,10 +41,11 @@ async function launchBrowser({ headless = true, preferredPath } = {}) {
   }
   return puppeteer.launch({
     executablePath,
-    headless: headless ? 'shell' : false,
+    headless: headless ? true : false,
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
       '--disable-web-security',
       '--disable-features=IsolateOrigins,site-per-process',
       '--disable-blink-features=AutomationControlled',

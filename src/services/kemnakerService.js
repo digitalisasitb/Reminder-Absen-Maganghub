@@ -135,10 +135,10 @@ async function performBrowserLogin(customCredentials = {}) {
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 850 });
 
-    // Samarkan User-Agent dan hilangkan tanda otomatisasi navigator.webdriver
-    await page.setUserAgent(
-      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-    );
+    // Gunakan User-Agent Chrome asli tanpa kata Headless
+    const rawUa = await browser.userAgent();
+    const cleanUa = rawUa.replace('HeadlessChrome', 'Chrome');
+    await page.setUserAgent(cleanUa);
     await page.evaluateOnNewDocument(() => {
       Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
       window.chrome = { runtime: {} };
@@ -174,22 +174,43 @@ async function performBrowserLogin(customCredentials = {}) {
     await sleep(2000);
 
     // Jika masuk ke halaman verifikasi Cloudflare ("Performing security verification"),
-    // beri waktu 5-8 detik agar Cloudflare memverifikasi fingerprint Chrome asli & otomatis redirect
-    for (let c = 0; c < 6; c++) {
+    // beri waktu agar Cloudflare memverifikasi fingerprint Chrome asli & otomatis redirect
+    for (let c = 0; c < 10; c++) {
       const isCfChallenge = await page.evaluate(() => {
         const txt = document.body ? document.body.innerText : '';
-        return txt.includes('security verification') || txt.includes('verifies you are not a bot');
+        return txt.includes('security verification') || txt.includes('verifies you are not a bot') || txt.includes('Cloudflare');
       }).catch(() => false);
 
       if (!isCfChallenge) break;
-      await addLog('auth', 'info', `Menunggu verifikasi keamanan otomatis (${c + 1}/6)...`);
-      await sleep(2500);
+      await addLog('auth', 'info', `Menunggu verifikasi keamanan otomatis Cloudflare (${c + 1}/10)...`);
+
+      // Coba klik checkbox Turnstile jika ada di sub-frame
+      try {
+        for (const frame of page.frames()) {
+          const cfBox = await frame.$('input[type="checkbox"], #challenge-stage, .ctp-checkbox-label');
+          if (cfBox) {
+            await cfBox.click().catch(() => {});
+            break;
+          }
+        }
+      } catch (_) {}
+
+      await sleep(3000);
     }
 
     if (/account\.kemnaker\.go\.id|login|auth/.test(page.url())) {
-      await addLog('auth', 'info', 'Mengisi kredensial SSO Kemnaker...');
+      await addLog('auth', 'info', 'Menyiapkan pengisian kredensial SSO Kemnaker...');
 
-      const userInput = await page.$('input[name="username"], input[name="email"], input[type="text"], input[type="tel"]');
+      let userInput = null;
+      try {
+        userInput = await page.waitForSelector(
+          'input[name="username"], input[name="email"], input[type="text"], input[type="tel"]',
+          { timeout: 15000 }
+        );
+      } catch (_) {
+        userInput = await page.$('input[name="username"], input[name="email"], input[type="text"], input[type="tel"]');
+      }
+
       if (userInput) {
         await userInput.click({ clickCount: 3 });
         await userInput.type(email, { delay: 40 });
@@ -464,15 +485,16 @@ async function syncAttendanceData() {
   const config = await getConfig();
   const token = process.env.KEMNAKER_BEARER_TOKEN || (config.kemnaker && config.kemnaker.bearerToken);
 
-  // Jika token tersedia, gunakan Direct API (sangat cepat & anti Cloudflare)
-  if (token) {
+  // Jika token disediakan secara khusus dan valid, coba Direct API
+  if (token && token.trim().length > 20) {
     try {
       return await syncViaDirectApi(token);
     } catch (apiErr) {
-      await addLog('sync', 'warn', `Direct API gagal (${apiErr.message}), mencoba fallback browser...`);
+      await addLog('sync', 'info', `Direct API dilewati (${apiErr.message}), beralih ke login browser GitHub Actions...`);
     }
   }
 
+  // Standar: Jalankan login browser (otomatis via Puppeteer di GitHub Actions)
   return performBrowserLogin({});
 }
 
