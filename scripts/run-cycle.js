@@ -74,7 +74,8 @@ async function main() {
   await notifyVercelDashboard(job, res);
 
   if (!res.success && res.error) {
-    console.error('[Runner] Peringatan: siklus selesai dengan status error:', res.error);
+    console.error('[Runner] Error: siklus gagal dijalankan:', res.error);
+    process.exit(1);
   }
 }
 
