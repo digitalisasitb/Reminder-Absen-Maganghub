@@ -380,7 +380,7 @@ async function syncViaDirectApi(token) {
     authorization: `Bearer ${cleanToken}`,
     origin: 'https://monev.maganghub.kemnaker.go.id',
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36',
-    'x-frontend-build-id': 'e77b4e10ebce5ee3dfad1b9f16c7f86ca561569d-production'
+    'x-frontend-build-id': 'b4acc98eed72703c955aa9ef30434dd13672f55c-production'
   };
 
   // 1. Tarik daftar peserta
@@ -480,21 +480,63 @@ async function syncViaDirectApi(token) {
   return { success: true, interns: finalInterns, unclockedCount, mode: 'api' };
 }
 
+async function refreshKemnakerToken(refreshToken) {
+  if (!refreshToken) return null;
+  const axios = require('axios');
+  try {
+    const res = await axios.post(
+      'https://monev-api.maganghub.kemnaker.go.id/api/v1/auth/refresh',
+      { refresh_token: refreshToken },
+      {
+        headers: {
+          Cookie: `monev_refresh_token=${refreshToken}`,
+          origin: 'https://monev.maganghub.kemnaker.go.id',
+          'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36'
+        },
+        timeout: 10000
+      }
+    );
+    if (res.data && res.data.access_token) {
+      await addLog('auth', 'success', 'Berhasil memperbarui Access Token Monev Kemnaker via Refresh Token otomatis!');
+      return res.data.access_token;
+    }
+  } catch (err) {
+    await addLog('auth', 'warn', `Auto-refresh token Monev gagal: ${err.message}`);
+  }
+  return null;
+}
+
 /** Sinkronisasi data presensi (dipakai semua siklus terjadwal) */
 async function syncAttendanceData() {
   const config = await getConfig();
-  const token = process.env.KEMNAKER_BEARER_TOKEN || (config.kemnaker && config.kemnaker.bearerToken);
+  let token = process.env.KEMNAKER_BEARER_TOKEN || (config.kemnaker && config.kemnaker.bearerToken);
+  const refreshToken = process.env.KEMNAKER_REFRESH_TOKEN || (config.kemnaker && config.kemnaker.refreshToken);
 
-  // Jika token disediakan secara khusus dan valid, coba Direct API
+  // 1. Coba Direct API dengan token yang ada (Sangat cepat, data lengkap, bypass Cloudflare)
   if (token && token.trim().length > 20) {
     try {
       return await syncViaDirectApi(token);
     } catch (apiErr) {
-      await addLog('sync', 'info', `Direct API dilewati (${apiErr.message}), beralih ke login browser GitHub Actions...`);
+      await addLog('sync', 'warn', `Direct API token aktif gagal (${apiErr.message}), mencoba auto-refresh token 30 hari...`);
     }
   }
 
-  // Standar: Jalankan login browser (otomatis via Puppeteer di GitHub Actions)
+  // 2. Jika token kadaluwarsa, otomatis perbarui via refresh token
+  if (refreshToken) {
+    const refreshedToken = await refreshKemnakerToken(refreshToken);
+    if (refreshedToken) {
+      config.kemnaker = config.kemnaker || {};
+      config.kemnaker.bearerToken = refreshedToken;
+      await saveConfig(config);
+      try {
+        return await syncViaDirectApi(refreshedToken);
+      } catch (retryErr) {
+        await addLog('sync', 'warn', `Direct API dengan refreshed token gagal: ${retryErr.message}`);
+      }
+    }
+  }
+
+  // 3. Fallback ke login browser jika token tidak tersedia
   return performBrowserLogin({});
 }
 
