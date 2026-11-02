@@ -14,8 +14,8 @@
     "statusDate": "2026-11-02",
     "jamAbsen": "-",
     "keterangan": "Belum mengisi kehadiran hari ini",
-    "lastReminderSent": null,
-    "reminderCount": 0
+    "lastReminderSent": "2026-11-02T07:28:37.261Z",
+    "reminderCount": 1
   },
   {
     "id": "MGN-002",
@@ -32,8 +32,8 @@
     "statusDate": "2026-11-02",
     "jamAbsen": "-",
     "keterangan": "Belum mengisi kehadiran hari ini",
-    "lastReminderSent": null,
-    "reminderCount": 0
+    "lastReminderSent": "2026-11-02T07:28:37.262Z",
+    "reminderCount": 1
   },
   {
     "id": "MGN-003",
@@ -68,7 +68,7 @@
     "statusDate": "2026-11-02",
     "jamAbsen": "-",
     "keterangan": "Belum mengisi kehadiran hari ini",
-    "lastReminderSent": null,
-    "reminderCount": 0
+    "lastReminderSent": "2026-11-02T07:28:37.262Z",
+    "reminderCount": 1
   }
 ]
